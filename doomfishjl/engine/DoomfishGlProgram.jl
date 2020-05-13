@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/globalvars.jl")
 
 includepath("doomfishjl/opengl/GlWindow.jl")

@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/assetnames.jl")
 includepath("doomfishjl/imageio/ColorSample.jl")
 includepath("doomfishjl/imageio/TextureImage.jl")

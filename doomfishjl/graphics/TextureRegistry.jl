@@ -1,4 +1,5 @@
 using Logging
+include("includepath.jl")
 includepath("doomfishjl/globalvars.jl")
 includepath("doomfishjl/doomfishtool.jl")
 includepath("doomfishjl/assetnames.jl")

@@ -1,4 +1,5 @@
 using ModernGL, GLAbstraction
+include("includepath.jl")
 include("typeEquivalencies.jl")
 includepath("doomfishjl/doomfishtool.jl")
 

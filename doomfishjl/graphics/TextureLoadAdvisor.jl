@@ -1,4 +1,5 @@
 using Logging
+include("includepath.jl")
 includepath("pseudointerface/interface.jl")
 
 @interface TextureLoadAdvisor begin

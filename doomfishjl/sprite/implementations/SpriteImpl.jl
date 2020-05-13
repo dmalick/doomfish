@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/sprite/Sprite.jl")
 includepath("doomfishjl/sprite/Clickability.jl")
 includepath("doomfishjl/engine/FrameClock.jl")

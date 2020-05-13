@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/graphics/SpriteTemplateRegistry.jl")
 includepath("doomfishjl/sprite/SpriteRegistry.jl")
 includepath("doomfishjl/assetnames.jl")

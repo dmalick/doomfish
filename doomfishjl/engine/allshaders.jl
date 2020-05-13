@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/opengl/ShaderProgram.jl")
 
 # WARNING: any of the below calls will cause a crash if opengl hasn't been initialized.

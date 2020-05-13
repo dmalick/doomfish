@@ -1,8 +1,8 @@
 using Logging
 import FileIO.load, Images.channelview
-basepath = "/home/gil/.atom/doomfishjl/"
-include(basepath*"globalvars.jl")
-include(basepath*"assetnames.jl")
+include("includepath.jl")
+includepath("doomfishjl/globalvars.jl")
+includepath("doomfishjl/assetnames.jl")
 include("TextureCompression.jl")
 include("TextureImage.jl")
 includepath("doomfishjl/doomfishtool.jl")

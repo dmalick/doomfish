@@ -1,6 +1,3 @@
-const pathbase = "/home/gil/doomfish/"
-includepath(path) = include( pathbase * path )
-
 include("metrics/Metrics.jl")
 
 

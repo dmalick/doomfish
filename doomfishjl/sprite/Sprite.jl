@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("pseudointerface/interface.jl")
 includepath("doomfishjl/assetnames.jl")
 includepath("doomfishjl/engine/FrameClock.jl")

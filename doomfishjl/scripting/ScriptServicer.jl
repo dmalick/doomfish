@@ -1,12 +1,19 @@
+include("includepath.jl")
+includepath("doomfishjl/sprite/SpriteRegistry.jl")
 
+
+# FIXME(?): the whole "ScriptServicer" abstraction was meant as an intermediary between java and python.
+# wonder whether it's really necessary in its current form
 
 
 struct ScriptServicer
     spriteRegistry::SpriteRegistry
     callbacks::Dict{Event, Function}
+    stateVariables::Dict{String, String}
+    globalShaderName::Union{String, Nothing}
     initializing::Bool
-    ScriptServicer(spriteRegistry::SpriteRegistry) = new(spriteRegistry, Dict{SpriteEvent, Function}(),
-                                                         Dict{EventType, Function}(), true)
+    ScriptServicer(spriteRegistry::SpriteRegistry) = new(spriteRegistry, Dict{Event, Function}(), nothing,
+                                                         Dict{String, String}(), true)
 end
 
 
@@ -50,7 +57,7 @@ function destroySprite(servicer::ScriptServicer, spriteName::SpriteName)
 end
 
 
-function registerCallback(servicer::ScriptServicer, event::Event, callback::Function)
+function registerCallback!(servicer::ScriptServicer, event::Event, callback::Function)
     # this should only be callable prior to onBegin, you should not be able to dynamically add callbacks
     # during the game, this would make saving/loading/rewinding/fast forwarding state intractable
     # callbacks should be set up during script initialization, initial sprites should be drawn during onBegin
@@ -69,14 +76,71 @@ TODO: EVENT-SPECIFIC CALLBACK REGISTERS GO HERE
 =#
 
 
-function registerSpriteCallback(servicer::ScriptServicer, eventType::EventType, spriteName::SpriteName,
+function registerSpriteCallback!(servicer::ScriptServicer, eventType::EventType, spriteName::SpriteName,
                                 callback::Function; moment::Union{Int, Nothing}=nothing, key::Union{Int, Nothing}=nothing)
     spriteEvent = SpriteEvent( eventType, spriteName, moment=moment, key=key )
     registerCallback( servicer, spriteEvent, callback )
 end
 
 
-function registerGlobalCallback(servicer::Servicer, eventType::EventType, callback::Function)
+function registerGlobalCallback!(servicer::ScriptServicer, eventType::EventType, callback::Function)
     globalEvent = GlobalEvent( eventType )
     registerCallback( servicer, globalEvent, callback )
+end
+
+
+function loadTemplate(servicer::Servicer, templateName::String)
+    checkInit(servicer)
+    loadTemplate( servicer.spriteRegistry, templateName )
+end
+
+
+function getFrameCount(servicer::ScriptServicer, templateName::String)
+    return getTemplate( servicer.spriteRegistry.spriteTemplateRegistry, templateName ).frameCount
+
+end
+
+
+getCallback(servicer::ScriptServicer, spriteEvent::SpriteEvent) = return ScriptServicer.callbacks[spriteEvent]
+
+
+
+function finishInit!(servicer::ScriptServicer)
+    servicer.initializing = false
+end
+
+
+function getCallbacksByType(servicer::ScriptServicer, type::Type{T}) where T <: Event
+    return filter( event -> (event.first isa type), servicer.callbacks )
+end
+
+getSpriteCallbacks(servicer::ScriptServicer) = getCallbacksByType(servicer, SpriteEvent)
+getGlobalCallbacks(servicer::ScriptServicer) = getCallbacksByType(servicer, GlobalEvent)
+
+
+getNamedMoment(scriptServicer::ScriptServicer, templateName::String, momentName::String) = getNamedMoment(
+                                                                                           scriptServicer.spriteRegistry,
+                                                                                           templateName, momentName)
+
+function setStateVariable!(servicer::ScriptServicer, key::String, val::String)
+    servicer.stateVariables[key] = val
+end
+
+
+function getStateVariable(servicer::ScriptServicer, key::String)
+    try
+        val = servicer.stateVariables[key]
+    catch e
+        e isa KeyError ? throw( ArgumentError("no such state variable: $key") ) : throw(e)
+    end
+    return val
+end
+
+
+getGlobalShaderName(servicer::ScriptServicer) = return servicer.globalShaderName
+
+
+function setGlobalShader!(servicer::ScriptServicer, shaderName::String)
+    checkInit(servicer)
+    servicer.globalShaderName = shaderName
 end

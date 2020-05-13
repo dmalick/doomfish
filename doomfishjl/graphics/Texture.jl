@@ -1,5 +1,6 @@
 using ModernGL, GLAbstraction
 import Base.close
+include("includepath.jl")
 includepath("doomfishjl/globalvars.jl")
 include("LazyTextureImage.jl")
 includepath("doomfishjl/opengl/ShaderProgram.jl")

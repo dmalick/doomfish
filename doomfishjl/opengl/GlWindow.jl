@@ -1,4 +1,5 @@
 using ModernGL, GLAbstraction, GLFW, Logging
+include("includepath.jl")
 include("coordinates.jl")
 includepath("doomfishjl/doomfishtool.jl")
 

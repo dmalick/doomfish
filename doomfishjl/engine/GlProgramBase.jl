@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("pseudointerface/interface.jl")
 includepath("doomfishjl/opengl/GlWindow.jl")
 includepath("doomfishjl/engine/GameLoopFrameClock.jl")

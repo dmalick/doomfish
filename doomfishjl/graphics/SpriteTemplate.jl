@@ -1,5 +1,5 @@
 #using Logging
-
+include("includepath.jl")
 includepath("doomfishjl/imageio/SpriteTemplateManifest.jl")
 includepath("doomfishjl/graphics/Texture.jl")
 includepath("doomfishjl/graphics/TextureRegistry.jl")

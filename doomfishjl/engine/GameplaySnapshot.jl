@@ -1,4 +1,5 @@
 using UUIDs, Dates
+include("includepath.jl")
 includepath("doomfishjl/assetnames.jl")
 includepath("doomfishjl/sprite/Clickability.jl")
 includepath("doomfishjl/opengl/coordinates.jl")

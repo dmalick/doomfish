@@ -1,3 +1,4 @@
+include("includepath.jl")
 includepath("doomfishjl/scripting/EventType.jl")
 # betamax:
 #= An event such as an input or timing event that pertains to a single specific sprite

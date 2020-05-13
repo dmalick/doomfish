@@ -1,3 +1,4 @@
+include("includepath.jl")
 include("FrameClock.jl")
 includepath("doomfishjl/globalvars.jl")
 includepath("doomfishjl/doomfishtool.jl")
