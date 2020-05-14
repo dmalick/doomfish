@@ -1,8 +1,8 @@
 using ModernGL, Logging, FileIO
 import Base.close, Base.convert
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/opengl/coordinates.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 include("ColorSample.jl")
 
 

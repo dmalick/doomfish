@@ -1,6 +1,6 @@
 using CodecLz4
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 LZ4_BUFFER = IOBuffer()
 BUFFER_CAPACITY = typemax(Int)

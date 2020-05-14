@@ -34,7 +34,7 @@ struct SpriteImpl <: Sprite
 
     function SpriteImpl(template::SpriteTemplate, name::SpriteName, clock::FrameClock)
         initialFrame = clock.currentFrame
-        creationSerial = template.nextCreationSerial++
+        creationSerial = (template.nextCreationSerial += 1)
         # soundSource = setupSound()  # TODO sound
         return new(template, textureRegistry, name, clock, creationSerial, initialFrame,
                    TRANSPARENCY_BASED, 0, 0, false, false, false, 0, #=soundSource,=# TextureCoordinate(0.5, 0.5))

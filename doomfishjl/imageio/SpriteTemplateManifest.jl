@@ -1,8 +1,7 @@
 using Logging
-basepath = "/home/gil/.atom/doomfishjl/"
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 
 
 #=  betamax:

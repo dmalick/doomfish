@@ -1,8 +1,5 @@
 using Logging
 
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/assetnames.jl")
 include("TextureImagesIO.jl")
 include("ManifestsPackage.jl")
 

@@ -1,11 +1,9 @@
 using Logging
 import FileIO.load, Images.channelview
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 include("TextureCompression.jl")
 include("TextureImage.jl")
-includepath("doomfishjl/doomfishtool.jl")
+
 
 # WARNING I don't really know what the hell this is for
 CACHE_KEY = "TextureImages#textureImageFromFile;lz4"
@@ -66,7 +64,7 @@ function textureImageFromFile(textureName::TextureName; readCache::Bool=false, w
             error( "Fast-load cached texture exists but loading failed or file was corrupt" )
         end
     end
-    textureImage = TextureImageFromFile( textureName.filename )
+    textureImage = textureImageFromFile( textureName.filename )
     if writeCache
         try
             saveToCache( false, textureImage )

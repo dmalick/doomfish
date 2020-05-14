@@ -5,9 +5,9 @@ include("LogicHandler.jl")
 
 
 struct EventProcessor
+    spriteRegistry::SpriteRegistry
     globalFrameClock::FrameClock
 
-    eventProcessor::EventProcessor
     enqueuedEvents::Vector{E} where E <: Event
 
     lastDispatchedMoment::Union{Int, Nothing}

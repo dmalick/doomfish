@@ -19,12 +19,12 @@ metrics = Metrics( Counters(),  Dict{String, TimedStats}() )
 # Changing will result in nullification of the entire texture cache!
 const textureCacheNamespace = "c3fabaa7-2973-4de2-9511-a7c022f329b6"
 
-const spritePathBase = "/home/gil/.atom/doomfishjl/data/sprites/"
-const shaderPathBase = "/home/gil/.atom/doomfishjl/shaders/"
+const spritePathBase = "/home/gil/doomfishdata/data/sprites/"
+const shaderPathBase = "/home/gil/doomfishdata/shaders/"
 
-const textureCacheDir = "/home/gil/.atom/doomfishjl/data/texturecache/"
+const textureCacheDir = "/home/gil/doomfishdata/data/texturecache/"
 const textureKeyFilename = "$(textureCacheDir)texturekey.dat"
-const manifestsPackageFilename = "/home/gil/.atom/doomfishjl/data/manifestsPackage.dat"
+const manifestsPackageFilename = "/home/gil/doomfishdata/data/manifestsPackage.dat"
 const usePrecompiledManifests = true
 const textureMaxFramesForResidentMemoryStrategy = 10
 const texturePreloadFrameLookahead = 16
