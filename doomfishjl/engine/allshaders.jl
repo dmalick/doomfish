@@ -1,5 +1,5 @@
-include("includepath.jl")
-includepath("doomfishjl/opengl/ShaderProgram.jl")
+
+include("/home/gil/doomfish/doomfishjl/opengl/ShaderProgram.jl")
 
 # WARNING: any of the below calls will cause a crash if opengl hasn't been initialized.
 # this file should be 'include'-ed only after initGlfw() has been called in the

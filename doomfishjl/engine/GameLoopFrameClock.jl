@@ -1,7 +1,7 @@
-include("includepath.jl")
+
 include("FrameClock.jl")
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 
 
 struct GameLoopFrameClock <: FrameClock
@@ -44,7 +44,7 @@ function beginLogicFrame!(clock::GameLoopFrameClock)
     if !clock.paused
         clock.currentFrame += 1
     end
-    # the hardcoded 1000 below is b/c we're using our own time_millis function
+    # the hardcoded 1000 below is b/c we're using our own time_ms function
     # to measure time in milliseconds rather than Julia's time or time_ns
     # functions which measure in seconds and nanoseconds respectfully
     clock.nextLogicFrameTime += 1000 / targetFps
@@ -62,12 +62,12 @@ end
 sleepTillNextLogicFrame(clock::GameLoopFrameClock) = sleepUntilPrecisely(clock.nextLogicFrameTime - 1)
 
 
-moreLogicFramesNeeded(clock::GameLoopFrameClock) = return !clock.paused && (time_millis() > clock.nextLogicFrameTime)
+moreLogicFramesNeeded(clock::GameLoopFrameClock) = return !clock.paused && (time_ms() > clock.nextLogicFrameTime)
 
 
 function resetLogicFrames!(clock::GameLoopFrameClock)
     @debug "Reset logic frame counter"
-    clock.nextLogicFrameTime = time_millis()
+    clock.nextLogicFrameTime = time_ms()
 end
 
 

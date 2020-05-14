@@ -1,7 +1,7 @@
-include("includepath.jl")
-includepath("doomfishjl/graphics/SpriteTemplateRegistry.jl")
-includepath("doomfishjl/sprite/SpriteRegistry.jl")
-includepath("doomfishjl/assetnames.jl")
+
+include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 
 
 struct TextureLoadAdvisorImpl <: TextureLoadAdvisor

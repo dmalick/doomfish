@@ -1,9 +1,9 @@
 #using Logging
-include("includepath.jl")
-includepath("doomfishjl/imageio/SpriteTemplateManifest.jl")
-includepath("doomfishjl/graphics/Texture.jl")
-includepath("doomfishjl/graphics/TextureRegistry.jl")
-includepath("doomfishjl/graphics/MemoryStrategy.jl")
+
+include("/home/gil/doomfish/doomfishjl/imageio/SpriteTemplateManifest.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/TextureRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/MemoryStrategy.jl")
 
 # betamax: FIXME this class is getting unweildy, break it up
 # no shit
@@ -31,7 +31,7 @@ function SpriteTemplate(manifest::SpriteTemplateManifest, textureRegistry::Textu
 end
 
 
-includepath("doomfishjl/engine/GameplaySnapshot.jl")
+include("/home/gil/doomfish/doomfishjl/engine/GameplaySnapshot.jl")
 
 
 # public void loadSoundBuffer(SoundRegistry soundRegistry) {  TODO: sound

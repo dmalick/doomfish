@@ -1,9 +1,9 @@
-include("includepath.jl")
-includepath("doomfishjl/sprite/Sprite.jl")
-includepath("doomfishjl/sprite/Clickability.jl")
-includepath("doomfishjl/engine/FrameClock.jl")
-includepath("doomfishjl/engine/GameplaySnapshot.jl")
-includepath("doomfishjl/opengl/coordinates.jl")
+
+include("/home/gil/doomfish/doomfishjl/sprite/Sprite.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/Clickability.jl")
+include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/engine/GameplaySnapshot.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
 
 
 # WARNING / TODO / whatever

@@ -31,37 +31,29 @@ struct SpriteTemplateManifest
     function SpriteTemplateManifest(templateName, textureNames, soundNames)
         # TODO: when additional sound functionality is added we'll remove this restriction
         checkArgument( length(soundNames) <= 1, "Too many OGG files for sprite template $templateName" )
-        checkArgument(0 != length(textureNames), "No sprite frame files found for $templateName")
+        checkArgument( 0 != length(textureNames), "No sprite frame files found for $templateName" )
         if !(textureNames |> issorted)
             sort!(textureNames)
         end
         if !(soundNames |> issorted)
             sort!(soundNames)
         end
-        return new(templateName, textureNames, soundNames)
+        return new( templateName, textureNames, soundNames )
     end
 end
 
 
-# not used anywhere yet
-function preloadEverythingCompiled() :: Dict{String, SpriteTemplateManifest}
-    # betamax: return ManifestsPackage.readFromFile().getManifestsMap();
-end
-
-
-function preloadEverything() :: Dict{String, SpriteTemplateManifest}
-    templateNames = readdir(spritePathBase)
+function preloadManifests() :: Dict{String, SpriteTemplateManifest}
+    templateNames = readdir( spritePathBase )
     @info "Preloading $(length(templateNames)) SpriteTemplateManifests"
-    return Dict(templateName => loadSpriteTemplateManifest(templateName) for templateName in templateNames)
+    return Dict( templateName => loadSpriteTemplateManifest(templateName) for templateName in templateNames )
 end
 
 
-# retooled, taking advantage of the split function.
-# for asset names ~20 chars and up, this version matches betamax performance in time and outperforms in memory (not that it matters much)
 function findTemplateName(assetPath::String)
     checkArgument( startswith( assetPath, spritePathBase ) && !endswith( assetPath, "/" ), "bad asset path $assetPath" )
     assetPathSplit =  split(assetPath, "/")
-    return assetPathSplit[length(assetPathSplit) - 1]
+    return assetPathSplit[ lastindex(assetPathSplit) - 1 ]
 end
 
 
@@ -98,7 +90,7 @@ end
 function getMomentNames(manifest::SpriteTemplateManifest)
     momentNamedTextures = getMomentNamedTextures(manifest)
     if !( momentNamedTextures |> isempty )
-        return momentNames = [match( MOMENT_TAG_PATTERN, textureName.filename ).captures[1] for textureName in momentNamedTextures]
+        return momentNames = [ match( MOMENT_TAG_PATTERN, textureName.filename ).captures[1] for textureName in momentNamedTextures ]
     else
         return []
     end

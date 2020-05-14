@@ -1,13 +1,13 @@
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
 
-includepath("doomfishjl/opengl/GlWindow.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
-includepath("doomfishjl/graphics/Texture.jl")
-includepath("doomfishjl/graphics/TextureRegistry.jl")
-includepath("doomfishjl/graphics/SpriteTemplateRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl")
 
-includepath("doomfishjl/sprite/SpriteRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/TextureRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
+
+include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 
 include("GlProgramBase.jl")
 include("GameLoopFrameClock.jl")
@@ -65,7 +65,7 @@ end
 
 
 function expensiveInitialize(program::DoomfishGlProgram)
-    preloadEverything(program.spriteTemplateRegistry)
+    preloadTemplates(program.spriteTemplateRegistry)
     newWorld(program, resetSprites = true)
 end
 

@@ -11,9 +11,9 @@ function compileTextures()
 
     @info "Collecting texture filenames"
 
-    texturePaths = [(spritePathBase*templatePath*"/"*filename) for templatePath in readdir( spritePathBase )
-                    for filename in readdir( spritePathBase*templatePath ) if occursin(IMG_OR_SOUND_PATTERN, filename)]
-    needCompiling = [texturePath for texturePath in texturePaths if !isUpToDate(texturePath)]
+    texturePaths = [ (spritePathBase * templatePath * "/" * filename) for templatePath in readdir(spritePathBase)
+                     for filename in readdir( spritePathBase * templatePath ) if occursin( IMG_OR_SOUND_PATTERN, filename ) ]
+    needCompiling = [ texturePath for texturePath in texturePaths if !isUpToDate(texturePath) ]
 
     @info "Found $(length(texturePaths)) textures on disk ($(length(needCompiling)))"
 
@@ -21,12 +21,13 @@ function compileTextures()
     startTime = time_ns()
     for texturePath in needCompiling
         now = time_ns()
+        # I sorta suspect the eta math is funky. Just copied it from betamax and converted to nanoseconds
         eta = length( needCompiling ) * (now - startTime) / jj - now + startTime
         @info "Compiling texture $jj of $(length(needCompiling)), ($( 100 * jj/length( needCompiling ))%, eta $(eta/10^9))"
         jj+=1
         #textureImage = textureImageFromFile(texturePath)
         textureImage = textureImageFromFile(texturePath)
-        saveToCache(true, textureImage)
+        saveToCache( true, textureImage )
         close(textureImage)
     end
     @info "Successfully recompiled $(length(needCompiling))"

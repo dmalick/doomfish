@@ -2,6 +2,7 @@ using ModernGL, UUIDs, Logging
 include("opengl/typeEquivalencies.jl")
 include("globalvars.jl")
 
+
 function loadResource(filename::String)::String
     return read(filename, String)
 end
@@ -39,7 +40,7 @@ end
 # all times in betamax are given in milliseconds, so it's helpful to have a function
 # to give us time in millis rather than seconds or nanos
 # WARNING / TODO: there's still probably some code kicking around using nanoseconds
-time_millis() = ceil( time() * 1000 ) |> Int64
+time_ms() = ceil( time() * 1000 ) |> Int64
 
 # why the hell not
 time_μs() = ceil( time() * 10^6 ) |> Int64
@@ -51,13 +52,13 @@ function sleepUntilPrecisely(targetTime::Int64) :: Bool
     # betamax:
     # if we are more than 5 ms out, [sleep] is good enough
     # only sleep for a third of the time we have left to conservatively account for inaccuracy
-    if time_millis() >= targetTime return false end
-    targetSleep = targetTime - time_millis()
+    if time_ms() >= targetTime return false end
+    targetSleep = targetTime - time_ms()
     while targetSleep > 5
         # WARNING: betamax wraps the below in a try block w/ a catch(InterruptedException)
         # I don't know that there is a Julia equivalent, leaving it naked for now
         sleep( targetSleep / 3000 ) # sleep ftn takes seconds, we're in millis
-        targetSleep = targetTime - time_millis()
+        targetSleep = targetTime - time_ms()
     end
     # betamax:
     # now that we're pretty close to it, busy loop
@@ -65,7 +66,7 @@ function sleepUntilPrecisely(targetTime::Int64) :: Bool
     # it would be worth researching whether this is actually how modern schedulers on linux and windows work
     # or not, and if so, use a self calibrated busy loop to reduce our system calls
     # or like i dunno, something.
-    while time_millis() < targetTime end
+    while time_ms() < targetTime end
     return true
 end
 

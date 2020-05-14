@@ -1,11 +1,11 @@
 using ModernGL, GLAbstraction
 import Base.close
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
+
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("LazyTextureImage.jl")
-includepath("doomfishjl/opengl/ShaderProgram.jl")
-includepath("doomfishjl/opengl/VAO.jl")
-includepath("doomfishjl/opengl/VBO.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/ShaderProgram.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/VAO.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/VBO.jl")
 
 # TODO: definitely give this one a once-over. I was mostly asleep writing it
 

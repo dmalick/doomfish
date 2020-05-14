@@ -1,8 +1,8 @@
-include("includepath.jl")
-includepath("pseudointerface/interface.jl")
-includepath("doomfishjl/assetnames.jl")
-includepath("doomfishjl/engine/FrameClock.jl")
-includepath("doomfishjl/graphics/SpriteTemplate.jl")
+
+include("/home/gil/doomfish/pseudointerface/interface.jl")
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplate.jl")
 
 
 @interface Sprite begin

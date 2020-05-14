@@ -1,5 +1,5 @@
-include("includepath.jl")
-includepath("doomfishjl/sprite/SpriteRegistry.jl")
+
+include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 
 
 # FIXME(?): the whole "ScriptServicer" abstraction was meant as an intermediary between java and python.

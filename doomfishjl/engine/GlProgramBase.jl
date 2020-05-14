@@ -1,8 +1,8 @@
-include("includepath.jl")
-includepath("pseudointerface/interface.jl")
-includepath("doomfishjl/opengl/GlWindow.jl")
-includepath("doomfishjl/engine/GameLoopFrameClock.jl")
-includepath("doomfishjl/globalvars.jl")
+
+include("/home/gil/doomfish/pseudointerface/interface.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl")
+include("/home/gil/doomfish/doomfishjl/engine/GameLoopFrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 
 @interface GlProgramBase begin

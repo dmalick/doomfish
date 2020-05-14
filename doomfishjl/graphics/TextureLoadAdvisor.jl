@@ -1,6 +1,6 @@
 using Logging
-include("includepath.jl")
-includepath("pseudointerface/interface.jl")
+
+include("/home/gil/doomfish/pseudointerface/interface.jl")
 
 @interface TextureLoadAdvisor begin
     # betamax:

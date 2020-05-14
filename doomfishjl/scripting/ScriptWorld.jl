@@ -1,6 +1,6 @@
-include("includepath.jl")
-includepath("doomfishjl/sprite/LogicHandler.jl")
-includepath("doomfishjl/sprite/SpriteRegistry.jl")
+
+include("/home/gil/doomfish/doomfishjl/sprite/LogicHandler.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 
 struct ScriptWorld <: LogicHandler
     spriteRegistry::SpriteRegistry

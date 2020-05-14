@@ -1,5 +1,5 @@
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
+
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("Texture.jl")
 
 

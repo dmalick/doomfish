@@ -6,17 +6,17 @@ struct ManifestsPackage
     manifestsDict::Dict{String, SpriteTemplateManifest}
 end
 function compileManifestsPackage()
-    return ManifestsPackage(preloadEverything())
+    return ManifestsPackage( preloadManifests() )
 end
 
 
 function writeToFile(manifestsPackage::ManifestsPackage)
-    serialize(manifestsPackageFilename, manifestsPackage)
+    serialize( manifestsPackageFilename, manifestsPackage )
     # this may not be necessary
     return manifestsPackageFilename
 end
 
 
 function readManifestsPackageFromFile()
-    return deserialize(manifestsPackageFilename)
+    return deserialize( manifestsPackageFilename )
 end

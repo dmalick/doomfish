@@ -1,10 +1,10 @@
-include("includepath.jl")
-includepath("doomfishjl/assetnames.jl")
-includepath("doomfishjl/engine/FrameClock.jl")
-includepath("doomfishjl/graphics/SpriteTemplateRegistry.jl")
-includepath("doomfishjl/sprite/SpriteEvent.jl")
-includepath("doomfishjl/sprite/implementations/SpriteImpl.jl")
-includepath("doomfishjl/sprite/Sprite.jl")
+
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/SpriteEvent.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/implementations/SpriteImpl.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/Sprite.jl")
 include("LogicHandler.jl")
 
 

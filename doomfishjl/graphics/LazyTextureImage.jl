@@ -1,9 +1,9 @@
-include("includepath.jl")
-includepath("doomfishjl/assetnames.jl")
-includepath("doomfishjl/imageio/ColorSample.jl")
-includepath("doomfishjl/imageio/TextureImage.jl")
-includepath("doomfishjl/imageio/TextureImagesIO.jl")
-includepath("doomfishjl/opengl/coordinates.jl")
+
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/imageio/ColorSample.jl")
+include("/home/gil/doomfish/doomfishjl/imageio/TextureImage.jl")
+include("/home/gil/doomfish/doomfishjl/imageio/TextureImagesIO.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
 
 # betamax:
 #=  A proxy for a TextureImage that may or may not actually be loaded into RAM at any given time

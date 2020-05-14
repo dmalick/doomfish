@@ -1,8 +1,8 @@
 using UUIDs, Dates
-include("includepath.jl")
-includepath("doomfishjl/assetnames.jl")
-includepath("doomfishjl/sprite/Clickability.jl")
-includepath("doomfishjl/opengl/coordinates.jl")
+
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/Clickability.jl")
+include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
 
 
 struct SpriteSnapshot

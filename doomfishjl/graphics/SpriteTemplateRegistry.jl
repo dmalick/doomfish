@@ -1,10 +1,9 @@
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/imageio/ManifestsPackage.jl")
-includepath("doomfishjl/imageio/SpriteTemplateManifest.jl")
-includepath("doomfishjl/graphics/SpriteTemplate.jl")
-# includepath("doomfishjl/sound/Sound Registry") # TODO: implement sound eventually  >:(
+
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/imageio/ManifestsPackage.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplate.jl")
+# include("/home/gil/doomfish/doomfishjl/sound/Sound Registry") # TODO: implement sound eventually  >:(
 
 
 struct SpriteTemplateRegistry
@@ -14,6 +13,10 @@ struct SpriteTemplateRegistry
     textureRegistry::TextureRegistry
 end
 
+
+preloadCompiledManifests() = return readManifestsPackageFromFile().manifestsDict
+
+
 # betamax:
 # This preloads manifests and sound, actual images of course are not actually loaded.
  # This should take a negligible amount of time if there are no sounds, a couple seconds maybe (wild guess)
@@ -21,7 +24,7 @@ end
  # If there are sounds, add 10-15 seconds per hour of OGG sound roughly.
  # It'd be nice to load OGG sound dynamically so we can avoid adding ten seconds to boot time,
  # but it's not the end of the world if there is and there was no time in the shipping schedule for that
-function preloadEverything(str::SpriteTemplateRegistry)
+function preloadTemplates(str::SpriteTemplateRegistry)
     # TODO: writing out "spriteTemplateRegistry" every time is annoying and makes things
     # hard to read. Maybe make a macro to unpack struct variable names into the scope, java style
     checkArgument( str.registeredManifests |> length == 0 )
@@ -31,13 +34,13 @@ function preloadEverything(str::SpriteTemplateRegistry)
         try
             @info "Using precompiled manifests file $(manifestsPackageFilename)"
             @info "Compiling manifests from resources"
-            merge!( str.registeredManifests, preloadEverythingCompiled() )
+            merge!( str.registeredManifests, preloadCompiledManifests() )
         catch
             @error "Could not load Global.manifestsPackageFilename: $(manifestsPackageFilename)"
         end
     else
         @info "Compiling manifests from resources"
-        merge!( str.registeredManifests, preloadEverything() )
+        merge!( str.registeredManifests, preloadManifests() )
     end
     for manifest in ( str.registeredManifests |> values )
         template = SpriteTemplate( manifest, str.textureRegistry )

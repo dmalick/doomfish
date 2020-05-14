@@ -1,11 +1,11 @@
 using Logging
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
-includepath("doomfishjl/doomfishtool.jl")
-includepath("doomfishjl/assetnames.jl")
-includepath("doomfishjl/graphics/Texture.jl")
-includepath("doomfishjl/graphics/TextureLoadAdvisor.jl")
-includepath("doomfishjl/graphics/MemoryStrategy.jl")
+
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/assetnames.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/TextureLoadAdvisor.jl")
+include("/home/gil/doomfish/doomfishjl/graphics/MemoryStrategy.jl")
 
 
 CHECK_READY_SLEEPTIME = 0.004 # ms
