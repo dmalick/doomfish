@@ -1,6 +1,5 @@
 import Base.+, Base.-, Base.convert
-include("includepath.jl")
-includepath("doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 
 # TextureCoordinates are bounded 0 to 1.0 or 0 to width, FramebufferCoordinates -1.0 to 1.0
 # Functions for converting between the two and addition/subtraction

@@ -49,27 +49,6 @@ function preloadEverythingCompiled() :: Dict{String, SpriteTemplateManifest}
 end
 
 
-
-# it's possible this whole DraftManifest business is totally unnecessary w/
-# the way we've written the preloadEverything() function
-mutable struct DraftManifest
-    textureNames::Vector{TextureName}
-    soundNames::Vector{SoundName}
-end
-function addAsset!(draftManifest::DraftManifest, assetPath::String)
-    splitPath = split(assetPath,".")
-    extension = splitPath[length(splitPath)] |> lowercase
-    if extension in (".tif", ".png", ".jpg", ".jpeg", ".bmp")
-        push!(draftManifest.textureNames, TextureName(assetPath))
-    elseif extension in (".ogg") # TODO: when we do add sound functionality, expand this list as needed
-        push!(draftManifest, SoundName(assetPath))
-    else
-        throw(ArgumentError(extension, "unrecognized asset file extension $extension in $assetPath"))
-    end
-end
-# end DraftManifest shit
-
-
 function preloadEverything() :: Dict{String, SpriteTemplateManifest}
     templateNames = readdir(spritePathBase)
     @info "Preloading $(length(templateNames)) SpriteTemplateManifests"
@@ -80,7 +59,7 @@ end
 # retooled, taking advantage of the split function.
 # for asset names ~20 chars and up, this version matches betamax performance in time and outperforms in memory (not that it matters much)
 function findTemplateName(assetPath::String)
-    checkArgument(startswith(assetPath, spritePathBase) && !endswith(assetPath, "/"), "bad asset path $assetPath")
+    checkArgument( startswith( assetPath, spritePathBase ) && !endswith( assetPath, "/" ), "bad asset path $assetPath" )
     assetPathSplit =  split(assetPath, "/")
     return assetPathSplit[length(assetPathSplit) - 1]
 end
@@ -109,7 +88,7 @@ function getMomentName(textureName::TextureName)
     if nothing != match( MOMENT_TAG_PATTERN, textureName.filename )
         return match( MOMENT_TAG_PATTERN, textureName.filename ).captures[1]
     end
-    throw(ArgumentError("TextureName $textureName is not a moment named texture"))
+    throw( ArgumentError("TextureName $textureName is not a moment named texture") )
 end
 
 
@@ -158,5 +137,5 @@ function getCountNumberOfNamedMoment(manifest::SpriteTemplateManifest, desiredMo
         end
     momentID += 1
     end
-    throw(ArgumentError("No moment named '$desiredMomentName' in $(manifest.templateName)"))
+    throw( ArgumentError("No moment named '$desiredMomentName' in $(manifest.templateName)") )
 end

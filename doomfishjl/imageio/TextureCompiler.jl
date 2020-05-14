@@ -22,7 +22,7 @@ function compileTextures()
     for texturePath in needCompiling
         now = time_ns()
         eta = length( needCompiling ) * (now - startTime) / jj - now + startTime
-        @info "Compiling texture $jj of $(length(needCompiling)), ($( 100 * jj/length( needCompiling ))%, eta $(eta/1000))"
+        @info "Compiling texture $jj of $(length(needCompiling)), ($( 100 * jj/length( needCompiling ))%, eta $(eta/10^9))"
         jj+=1
         #textureImage = textureImageFromFile(texturePath)
         textureImage = textureImageFromFile(texturePath)

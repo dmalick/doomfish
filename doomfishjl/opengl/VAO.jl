@@ -1,7 +1,6 @@
 using ModernGL, GLAbstraction
-include("includepath.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 include("typeEquivalencies.jl")
-includepath("doomfishjl/doomfishtool.jl")
 
 
 struct VAO

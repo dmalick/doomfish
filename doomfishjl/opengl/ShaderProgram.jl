@@ -1,6 +1,5 @@
 using ModernGL, GLAbstraction
-include("includepath.jl")
-includepath("doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("Shader.jl")
 
 

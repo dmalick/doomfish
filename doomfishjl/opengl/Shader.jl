@@ -1,6 +1,5 @@
 using ModernGL, GLAbstraction
-include("includepath.jl")
-includepath("doomfishjl/doomfishtool.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 
 
 # WARNING: certain operations on shaders will fail if opengl hasn't been

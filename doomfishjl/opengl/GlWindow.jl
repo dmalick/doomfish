@@ -1,7 +1,6 @@
 using ModernGL, GLAbstraction, GLFW, Logging
-include("includepath.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 include("coordinates.jl")
-includepath("doomfishjl/doomfishtool.jl")
 
 
 mutable struct GlWindow
