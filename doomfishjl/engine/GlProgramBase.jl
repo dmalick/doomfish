@@ -52,7 +52,7 @@ function runGlProgram(program::GlProgramBase)
                 checkGlError()
                 @debug "User initialization done"
             end
-            updateTimedStats!( metrics, USER_INIT, userInitStats )
+            updateStats!( metrics, USER_INIT, userInitStats )
             resetLogicFrames(program.frameClock)
             try
                 while !getShouldClose(program.mainWindow)
@@ -97,8 +97,8 @@ getCursorPosition(program::GlProgramBase) = getCursorPosition(program.mainWindow
 keyCallback(window::Int64, key::Int, scancode::Int, action::Int, mods::Int) = keyInputEvent(key, action, mods)
 
 
-reportMetrics() = return Dict{TimedStatsName, Dict{TimedStatsFieldName,String}}( timedStats.name => timedStatsAnalysis(timedStats)
-                                                                                 for timedStats in values( metrics.timedStatContainers ))
+reportMetrics() = return Dict{StatsName, Dict{StatsFieldName,String}}( Stats.name => StatsAnalysis(Stats)
+                                                                                 for Stats in values( metrics.statContainers ))
 
 closeWindow(program::GlProgramBase) = shouldClose( program.mainWindow, true )
 
@@ -111,9 +111,9 @@ function loopOnce(program::GlProgramBase)
         idleTime5sStats = @timed begin
             if !sleepTilNextLogicFrame() metrics.counters.skippedFramesByRenderCounter += 1 end
         end
-        updateTimedStats!( metrics, IDLE_TIME_5SEC, idleTime5sStats )
+        updateStats!( metrics, IDLE_TIME_5SEC, idleTime5sStats )
     end
-    updateTimedStats!( metrics, IDLE_TIME, idleTimeStats )
+    updateStats!( metrics, IDLE_TIME, idleTimeStats )
     videoFrameDriftStats = @timed begin
         # betamax:
         # careful moving videoFrameDriftTimer. It should start exactly when frameClock increments in its
@@ -136,7 +136,7 @@ function loopOnce(program::GlProgramBase)
                     beginLogicFrame!(program.frameClock)
                     updateLogic(program)
                 end
-                updateTimedStats!( metrics, LOGIC, logicStats )
+                updateStats!( metrics, LOGIC, logicStats )
                 # betamax:
                 # the pause function continues logic updates because logic updates should be idempotent in the absence
                 # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
@@ -147,13 +147,13 @@ function loopOnce(program::GlProgramBase)
                 else break end
             end
         end
-        updateTimedStats!( metrics, FULL_LOGIC, fullLogicStats )
+        updateStats!( metrics, FULL_LOGIC, fullLogicStats )
         renderStats = @timed begin
             renderPhaseBegin( program.mainWindow )
             updateView( program )
             renderPhaseEnd( program.mainWindow )
         end
-        updateTimedStats!( metrics, RENDER, renderStats )
+        updateStats!( metrics, RENDER, renderStats )
     end
-    updateTimedStats!( metrics, VIDEO_FRAME_DRIFT, videoFrameDriftStats )
+    updateStats!( metrics, VIDEO_FRAME_DRIFT, videoFrameDriftStats )
 end

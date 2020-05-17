@@ -13,7 +13,7 @@ function loadCached(filename::String)
     if nothing != fileStream
         @info "Loading from cache: $filename"
         cachedImageWithLoadTimeStats = @timed loadFromStream( filename, fileStream )
-        updateTimedStats!( metrics, CACHED_IMAGE_LOADING, cachedImageWithLoadTimeStats... )
+        updateStats!( metrics, CACHED_IMAGE_LOADING, cachedImageWithLoadTimeStats... )
         return cachedImageWithLoadTimeStats[1]
     else
         return nothing

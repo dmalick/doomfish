@@ -44,10 +44,10 @@ function renderTemplate(spriteTemplate::SpriteTemplate, whichFrame::Int, locatio
     texture = textures[ whichFrame ]
 
     textureRenderStats = @timed render( texture, location, shaderProgram )
-    updateTimedStats!( metrics, TEXTURE_RENDERING, textureRenderingStats )
+    updateStats!( metrics, TEXTURE_RENDERING, textureRenderingStats )
 
     textureAfterRenderStats = @timed afterRender( spriteTemplate.textureRegistry, spriteTemplate.memoryStrategy, texture )
-    updateTimedStats!( metrics, TEXTURE_AFTER_RENDER )
+    updateStats!( metrics, TEXTURE_AFTER_RENDER )
 end
 
 

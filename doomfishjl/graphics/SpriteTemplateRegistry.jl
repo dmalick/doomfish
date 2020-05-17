@@ -57,8 +57,7 @@ end
 # dayparts for example) rather than entirely automagical, especially since the performance implications are
 # quite serious if the magic gets it wrong
 # conversely, automatic background loading of things that will be needed in the future might be worthwhile
-
-function getTemplate(str::SpriteTemplateRegistry, name::String) :: SpriteTemplate
+function addTemplate!(str::SpriteTemplateRegistry, name::String) :: SpriteTemplate
     if !haskey(str.registeredTemplates, name)
         template = SpriteTemplate( getManifest(name), str.textureRegistry )
         # betamax:
@@ -69,10 +68,13 @@ function getTemplate(str::SpriteTemplateRegistry, name::String) :: SpriteTemplat
         # loadSoundBuffer(template, str.soundRegistry) # TODO: sound
         str.registeredTemplates[name] = template
         mertics.counters.loadedSpriteTemplateCounter += 1
-    else
-        template = str.registeredTemplates[name]
     end
-    return template
+end
+
+
+function getTemplate!(str::SpriteTemplateRegistry, name::String) :: SpriteTemplate
+    addTemplate!( str, name )
+    return str.registeredTemplates[name]
 end
 
 

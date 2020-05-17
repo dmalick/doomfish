@@ -33,7 +33,7 @@ end
 
 function dispatchSingleEvent(eventProcessor::EventProcessor, logicHandler::L, event::E) where L <: LogicHandler where E <: Event
     handleSingleEventStats = @timed onEvent( logicHandler, event )
-    updateTimedStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
+    updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
 end
 
 
@@ -94,6 +94,6 @@ end
 function dispatchSingleSpriteEvent(eventProcessor::EventProcessor, logicHandler::L, event::SpriteEvent) where L <: LogicHandler
     if spriteExists( eventProcessor.spriteRegistry, event.name ) || event.eventType == SPRITE_DESTROY
         handleSingleEventStats = @timed onSpriteEvent( logicHandler, event )
-        updateTimedStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
+        updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
     end
 end

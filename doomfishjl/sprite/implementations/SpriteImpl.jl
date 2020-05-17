@@ -6,12 +6,6 @@ include("/home/gil/doomfish/doomfishjl/engine/GameplaySnapshot.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
 
 
-# WARNING / TODO / whatever
-# dom built this as an inner class of SpriteTemplate in betamax. this makes our job a particular
-# pain in the ass.
-# I'm not yet sure how to proceed.
-
-
 struct SpriteImpl <: Sprite
 
     template::SpriteTemplate

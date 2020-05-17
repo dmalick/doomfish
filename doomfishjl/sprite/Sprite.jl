@@ -22,10 +22,10 @@ end
 
 
 function createSprite(spriteTemplate::SpriteTemplate, name::SpriteName, frameClock::FrameClock, SpriteImplementation::Type{S}) where S <: Sprite
-    return SpriteImplementation(spriteTemplate, name, frameClock)
+    return SpriteImplementation( spriteTemplate, name, frameClock )
 end
 
 
 function createFromSnapshot(snapshot::GameplaySnapshot, frameClock::FrameClock, spriteImplementation::Type{S})::S where S <: Sprite
-    SpriteImplementation( snapshot, frameClock )
+    return SpriteImplementation( snapshot, frameClock )
 end

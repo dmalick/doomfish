@@ -64,15 +64,15 @@ end
 # negates the type safety of the betamax TextureName and SoundName wrappers. As it is there are convert methods for
 # going from TextureName/SoundName to String, but not the other way around.
 function loadSpriteTemplateManifest(templateName::String)
-    templatePathContents = readdir( spritePathBase * templateName)
-    spriteFilenames = [TextureName(filename) for filename in templatePathContents if occursin(IMG_PATTERN, filename)]
-    soundFilenames = [SoundName(filename) for filename in templatePathContents if occursin(SOUND_PATTERN, filename)]
-    return SpriteTemplateManifest(templateName, spriteFilenames, soundFilenames)
+    templatePathContents = readdir( spritePathBase * templateName )
+    spriteFilenames = [ TextureName(filename) for filename in templatePathContents if occursin(IMG_PATTERN, filename) ]
+    soundFilenames = [ SoundName(filename) for filename in templatePathContents if occursin(SOUND_PATTERN, filename) ]
+    return SpriteTemplateManifest( templateName, spriteFilenames, soundFilenames )
 end
 
 
 function getMomentNamedTextures(manifest::SpriteTemplateManifest)
-    return momentNamedTextures = [textureName for textureName in manifest.textureNames if occursin(MOMENT_PATTERN, textureName.filename)]
+    return momentNamedTextures = [ textureName for textureName in manifest.textureNames if occursin( MOMENT_PATTERN, textureName.filename ) ]
 end
 
 

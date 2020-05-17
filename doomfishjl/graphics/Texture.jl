@@ -80,7 +80,7 @@ function isTransparentAtCoordinate(texture::Texture, coordinate::TextureCoordina
             setLoaded( texture.lazyTextureImage, true )
 
         end
-        updateTimedStats!( metrics, JIT_MOUSE_TEXTURE_LOADING, jitMouseTextureLoadStats )
+        updateStats!( metrics, JIT_MOUSE_TEXTURE_LOADING, jitMouseTextureLoadStats )
     end
     color = getPixel( texture.lazyTextureImage, coordinate )
     transparentEnough = isTransparentEnough(color)

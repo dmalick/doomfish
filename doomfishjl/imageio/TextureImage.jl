@@ -102,7 +102,7 @@ function uploadTextureImageGl( textureImage::TextureImage, boundTarget::Int )
                  GL_UNSIGNED_BYTE,
                  textureImage.bytePixelData.data
                  )
-    updateTimedStats!( metrics, TEXTURE_UPLOADS, textureUploadStats )
+    updateStats!( metrics, TEXTURE_UPLOADS, textureUploadStats )
 end
 
 getByteCount(textureImage::TextureImage) = sizeof(textureImage.bytePixelData.data)

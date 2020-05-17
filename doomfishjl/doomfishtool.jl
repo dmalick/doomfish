@@ -2,7 +2,6 @@ using ModernGL, UUIDs, Logging
 include("opengl/typeEquivalencies.jl")
 include("globalvars.jl")
 
-
 function loadResource(filename::String)::String
     return read(filename, String)
 end

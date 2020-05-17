@@ -10,7 +10,7 @@ pausedTextureFile = ""
 loadingTextureFile = ""
 crashTextureFile = ""
 
-metrics = Metrics( Counters(),  Dict{String, TimedStats}() )
+metrics = Metrics( Counters(),  Dict{String, Stats}() )
 
 # constants
 

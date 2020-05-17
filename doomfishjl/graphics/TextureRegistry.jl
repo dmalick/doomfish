@@ -89,8 +89,8 @@ function startLoadingThread(textureRegistry::TextureRegistry)
             end
         end
     end
-    for timedStatsTuple in textureRegistry.texturePreloadAdvisingStats
-        updateTimedStats!(metrics, TEXTURE_PRELOAD_ADVISING, timedStatsTuple)
+    for StatsTuple in textureRegistry.texturePreloadAdvisingStats
+        updateStats!(metrics, TEXTURE_PRELOAD_ADVISING, StatsTuple)
     end
 end
 

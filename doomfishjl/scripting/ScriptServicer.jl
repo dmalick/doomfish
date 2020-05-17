@@ -1,79 +1,45 @@
-
-include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
 
 
 # FIXME(?): the whole "ScriptServicer" abstraction was meant as an intermediary between java and python.
 # wonder whether it's really necessary in its current form
-
+# TODO: in any case, as this file swells, break it up
 
 struct ScriptServicer
-    spriteRegistry::SpriteRegistry
+    eventProcessor::EventProcessor
     callbacks::Dict{Event, Function}
     stateVariables::Dict{String, String}
     globalShaderName::Union{String, Nothing}
     initializing::Bool
-    ScriptServicer(spriteRegistry::SpriteRegistry) = new(spriteRegistry, Dict{Event, Function}(), nothing,
-                                                         Dict{String, String}(), true)
-end
-
-
-log(msg::String) = @debug("[ScriptServicer] $msg")
-
-
-fatal(msg::String) = error("Fatal script error: $msg")
-
-
-function normalExit()
-    @info "Script requested normal exit"
-    exit()
+    rebootFlag::Bool
+    ScriptServicer(eventProcessor::EventProcessor) = new(eventProcessor, Dict{Event, Function}(), nothing,
+                                                         Dict{String, String}(), true, false)
 end
 
 
 checkInit(servicer::ScriptServicer) = checkState( !servicer.initializing,
                                             "Only callback registration may be performed during initialization" )
 
-
-function getSpriteByName(servicer::ScriptServicer, spriteName::SpriteName)
-    checkInit(servicer)
-    return getSpriteByName(spriteRegistry, spriteName)
+function finishInit!(servicer::ScriptServicer)
+    servicer.initializing = false
 end
 
 
-function spriteExists(servicer::ScriptServicer, spriteName::SpriteName)
-    checkInit(servicer)
-    return spriteExists( servicer.spriteRegistry, spriteName )
-end
 
 
-function createSprite(servicer::ScriptServicer, templateName::String, spriteName::SpriteName)
-    checkInit(servicer)
-    createSprite!( servicer.spriteRegistry, templateName, spriteName )
-end
 
-
-function destroySprite(servicer::ScriptServicer, spriteName::SpriteName)
-    checkInit(servicer)
-    destroySprite!( servicer.spriteRegistry, spriteName)
-end
-
+# callback handling
 
 function registerCallback!(servicer::ScriptServicer, event::Event, callback::Function)
     # this should only be callable prior to onBegin, you should not be able to dynamically add callbacks
     # during the game, this would make saving/loading/rewinding/fast forwarding state intractable
     # callbacks should be set up during script initialization, initial sprites should be drawn during onBegin
     # (so if state is saved onBegin can just be skipped and the sprite stack can be restored)
-    checkArgument( servicer.spriteRegistry.acceptingCallbacks, "cannot alter callbacks after already begun" )
+    checkArgument( servicer.eventProcessor.acceptingCallbacks, "cannot alter callbacks after already begun" )
     checkArgument( !haskey(servicer.callbacks, event), "Callback already registered for $event:
         $(servicer.callbacks[event])" )
     servicer.callbacks[event] = callback
 end
-
-
-#=
-
-TODO: EVENT-SPECIFIC CALLBACK REGISTERS GO HERE
-
-=#
 
 
 function registerSpriteCallback!(servicer::ScriptServicer, eventType::EventType, spriteName::SpriteName,
@@ -89,38 +55,75 @@ function registerGlobalCallback!(servicer::ScriptServicer, eventType::EventType,
 end
 
 
-function loadTemplate(servicer::Servicer, templateName::String)
-    checkInit(servicer)
-    loadTemplate( servicer.spriteRegistry, templateName )
-end
-
-
-function getFrameCount(servicer::ScriptServicer, templateName::String)
-    return getTemplate( servicer.spriteRegistry.spriteTemplateRegistry, templateName ).frameCount
-
-end
-
-
 getCallback(servicer::ScriptServicer, spriteEvent::SpriteEvent) = return ScriptServicer.callbacks[spriteEvent]
-
-
-
-function finishInit!(servicer::ScriptServicer)
-    servicer.initializing = false
-end
 
 
 function getCallbacksByType(servicer::ScriptServicer, type::Type{T}) where T <: Event
     return filter( event -> (event.first isa type), servicer.callbacks )
 end
 
+
 getSpriteCallbacks(servicer::ScriptServicer) = getCallbacksByType(servicer, SpriteEvent)
 getGlobalCallbacks(servicer::ScriptServicer) = getCallbacksByType(servicer, GlobalEvent)
 
 
-getNamedMoment(scriptServicer::ScriptServicer, templateName::String, momentName::String) = getNamedMoment(
-                                                                                           scriptServicer.spriteRegistry,
-                                                                                           templateName, momentName)
+#=
+
+TODO: EVENT-SPECIFIC CALLBACK REGISTERS GO HERE
+
+=#
+
+
+
+
+
+# sprite handling
+
+function getSpriteByName(servicer::ScriptServicer, spriteName::SpriteName)
+    checkInit(servicer)
+    return getSpriteByName(eventProcessor, spriteName)
+end
+
+
+function spriteExists(servicer::ScriptServicer, spriteName::SpriteName)
+    checkInit(servicer)
+    return spriteExists( servicer.eventProcessor, spriteName )
+end
+
+
+function createSprite(servicer::ScriptServicer, templateName::String, spriteName::SpriteName)
+    checkInit(servicer)
+    createSprite( servicer.eventProcessor, templateName, spriteName )
+end
+
+
+function destroySprite(servicer::ScriptServicer, spriteName::SpriteName)
+    checkInit(servicer)
+    destroySprite( servicer.eventProcessor, spriteName)
+end
+
+
+
+
+
+# SpriteTemplate related functions
+
+function loadSpriteTemplate(servicer::ScriptServicer, templateName::String)
+    checkInit(servicer)
+    loadSpriteTemplate( servicer.eventProcessor, templateName )
+end
+
+
+getFrameCount(servicer::ScriptServicer, templateName::String) = return getSpriteTemplate( servicer.eventProcessor, templateName ).frameCount
+
+
+getNamedMoment(servicer::ScriptServicer, templateName::String, momentName::String) = getNamedMoment(servicer.eventProcessor, templateName, momentName)
+
+
+
+
+
+# state variable / global shader handling
 
 function setStateVariable!(servicer::ScriptServicer, key::String, val::String)
     servicer.stateVariables[key] = val

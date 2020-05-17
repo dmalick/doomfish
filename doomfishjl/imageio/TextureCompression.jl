@@ -41,7 +41,7 @@ function decompress(readStream::IOStream, expectedBytes::Int) ::IOBuffer
         lz4Buffer.maxsize = lz4Buffer.size
 
     end
-    updateTimedStats!( metrics, MEMORY_DECOMPRESSION, memoryDecompressStats )
+    updateStats!( metrics, MEMORY_DECOMPRESSION, memoryDecompressStats )
     return lz4Buffer
 end
 
@@ -61,6 +61,6 @@ function decompress(compressedPixelData::IOBuffer, expectedBytes::Int) ::IOBuffe
         lz4Buffer.size = decompressedByteCount
         lz4Buffer.maxsize = lz4Buffer.size
     end
-    updateTimedStats!( metrics, MEMORY_DECOMPRESSION, memoryDecompressStats )
+    updateStats!( metrics, MEMORY_DECOMPRESSION, memoryDecompressStats )
     return lz4Buffer
 end
