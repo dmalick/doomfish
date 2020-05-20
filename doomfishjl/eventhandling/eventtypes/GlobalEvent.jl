@@ -1,6 +1,12 @@
-include("/home/gil/doomfish/doomfishjl/eventhandling/Event.jl")
+include("Event.jl")
+
+
+@enum GlobalEventType begin
+    BEGIN
+    PROPAGATE
+end
 
 
 struct GlobalEvent <: Event
-    eventType::EventType
+    eventType::GlobalEventType
 end

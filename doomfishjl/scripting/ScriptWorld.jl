@@ -1,14 +1,27 @@
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/GlobalEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/SpriteEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/LogicHandler.jl")
-include("/home/gil/doomfish/doomfishjl/scripting/ScriptServicer.jl")
+include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("LogicHandler.jl")
 
 
 struct ScriptWorld <: LogicHandler
+
     eventProcessor::EventProcessor
-    servicer::ScriptServicer
+
+    stateVariables::Dict{String, Any}
+    globalShaderName::Union{String, Nothing}
+
+    initializing::Bool
+    rebootFlag::Bool
+
+end
+
+
+function getCallback(σ::Scriptworld, event::Event)
+    checkArgument( haskey(σ.eventProcessor, event), "event $event not registered in $(σ.eventProcessor.registeredEvents)" )
+    return σ.eventProcessor.registeredEvents[event]
 end
 
 
@@ -19,18 +32,18 @@ end
 
 
 function onEvent(σ::ScriptWorld, event::Event)
-    checkArgument( haskey( σ.servicer.callbacks, event ), "no callback function assigned to event $event" )
-    callback = getCallback(σ.servicer, event)
+    checkArgument( haskey( σ.eventProcessor, event ), "event $event not registered in $(σ.eventProcessor.registeredEvents)" )
+    callback = getCallback( σ, event )
     @debug "handling event $event via $callback"
-    invokeCallback(callback, INVOKE_EVENT_CALLBACK)
+    invokeCallback( callback, INVOKE_EVENT_CALLBACK )
 end
 
 
 function onBegin(σ::ScriptWorld)
     @info "onBegin"
-    checkArgument( haskey( σ.servicer.callbacks, GlobalEvent(BEGIN) ), "no callback function assigned to event $event" )
-    callback = getCallback( σ.servicer, GlobalEvent(BEGIN) )
-    invokeCallback(callback, INVOKE_BEGIN_CALLBACK)
+    checkArgument( haskey( σ.eventProcessor, GlobalEvent(BEGIN) ), "GlobalEvent(BEGIN) not registered in $(σ.eventProcessor.registeredEvents)" )
+    callback = σ.eventProcessor.registeredEvents[ GlobalEvent(BEGIN) ]
+    invokeCallback( callback, INVOKE_BEGIN_CALLBACK )
 end
 
 
@@ -38,12 +51,14 @@ end
 # I ♥ Julia
 
 function loadScripts(σ::ScriptWorld, scriptNames::Vector{String})
-    scriptWorldVector = [σ for name in 1:scriptNames]
-    map(loadScript, scriptWorldVector, scriptNames)
+    for scriptName in scriptNames
+        checkArgument( scriptName |> isfile, "invalid script path: $scriptName" )
+        loadScript(σ, scriptName)
+    end
 end
 
 
-# WARNING: I'm not sure the "include" below will do quite what I want it to
+# WARNING: not sure the "include" below will do quite what I want it to
 function loadScript(σ::ScriptWorld, scriptName::String)
     σ.eventProcessor.acceptingCallbacks = true
     @info "Evaluating script from $scriptName"
@@ -53,18 +68,45 @@ function loadScript(σ::ScriptWorld, scriptName::String)
 end
 
 
-getAllCallbacks(σ::ScriptWorld) = return σ.servicer.callbacks
-
-getStateVariables(σ::ScriptWorld) = return σ.servicer.stateVariables
-
-getGlobalShader(σ::ScriptWorld) = getGlobalShaderName(σ.servicer)
-
-setGlobalShader(σ::ScriptWorld, shaderName::String) = setGlobalShader!( σ.servicer, shaderName )
-
-function setStateVariables(σ::ScriptWorld, variables::Dict{String, String})
-    for varname in keys(variables)
-        σ.servicer.stateVariables[varname] = variables[varname]
-    end
+function checkInit(σ::ScriptWorld)
+    checkState( !σ.initializing, "Only callback registration may be performed during initialization" )
 end
 
-shouldReboot(σ::ScriptWorld) = return σ.servicer.rebootFlag
+
+function finishInit!(σ::ScriptWorld)
+    σ.initializing = false
+end
+
+
+getRegisteredEvents(σ::ScriptWorld) = return σ.eventProcessor.registeredEvents
+getRegisteredEvents(σ::ScriptWorld, type::Type{Event}) = filter( (event)-> typeof(event.first) == type, getRegisteredEvents(σ) )
+
+
+getCallbacks(σ::ScriptWorld) = return values( σ.registeredEvents )
+getCallbacks(σ::ScriptWorld, eventType::Type{Event}) = [ event.second for event in getRegisteredEvents(σ) if typeof(event.first) == eventType ]
+
+
+getGlobalShader(σ::ScriptWorld) = getGlobalShaderName( σ.globalShader )
+
+function setGlobalShader!(σ::ScriptWorld, shaderName::String)
+    σ.globalShader = shaderName
+end
+
+
+function getStateVariable(σ::ScriptWorld, name::String)
+    checkArgument( haskey( σ.stateVariables, name ), "no such state variable: $name" )
+    return σ.stateVariables[name]
+end
+
+function setStateVariable(σ::ScriptWorld, name::String, value)
+    σ.stateVariables[name] = value
+end
+
+
+#betamax: FIXME 13am code
+shouldReboot(σ::ScriptWorld) = return σ.rebootFlag
+
+function reboot!(σ::ScriptWorld)
+    σ.rebootFlag = true
+    @info "Rebooting everything (scheduled)"
+end

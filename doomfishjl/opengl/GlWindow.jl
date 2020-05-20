@@ -92,9 +92,9 @@ function createWindow(glWindow::GlWindow)
 
 end
 
-function getShouldClose(glWindow::GlWindow)
+function shouldClose(glWindow::GlWindow)
     #checkState()
-    return GLFW.WindowShouldClose(glWindow.handle)
+    return GLFW.WindowShouldClose( glWindow.handle )
 end
 
 function centerWindow(glWindow::GlWindow, createdWindowHandle::GLFW.Window)
@@ -104,7 +104,7 @@ function centerWindow(glWindow::GlWindow, createdWindowHandle::GLFW.Window)
                                 (vidmode.height ÷ glWindow.height) ÷ 2)
 end
 
-function shouldClose(glWindow::GlWindow, shouldClose::Bool)
+function setShouldClose(glWindow::GlWindow, shouldClose::Bool)
     checkstate(!glWindow.isDestroyed)
     GLFW.SetWindowShouldClose(glWindow.handle, shouldClose)
 end

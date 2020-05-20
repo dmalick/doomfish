@@ -21,6 +21,7 @@ const textureCacheNamespace = "c3fabaa7-2973-4de2-9511-a7c022f329b6"
 
 const spritePathBase = "/home/gil/doomfishdata/data/sprites/"
 const shaderPathBase = "/home/gil/doomfishdata/shaders/"
+const resourcePathBase = "/home/gil/doomfish/resources/"
 
 const textureCacheDir = "/home/gil/doomfishdata/data/texturecache/"
 const textureKeyFilename = "$(textureCacheDir)texturekey.dat"

@@ -1,8 +1,6 @@
 include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/LogicHandler.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/SpriteEvent.jl")
 include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
-include("/home/gil/doomfish/doomfishjl/sprite/implementations/SpriteImpl.jl")
+include("/home/gil/doomfish/doomfishjl/sprite/implementations/DefaultSpriteImpl.jl")
 include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 include("Sprite.jl")
 
@@ -15,14 +13,17 @@ struct SpriteRegistry
 end
 
 
-function createSprite!(σ::SpriteRegistry, frameClock::FrameClock, templateName::String, spriteName::SpriteName) :: Sprite
+function createSprite!(σ::SpriteRegistry, frameClock::FrameClock, templateName::String, spriteName::SpriteName, implementation::Type{S}) where S <: Sprite
     @debug "Creating $spriteName from template $templateName"
 
-    sprite = create( getTemplate( σ.spriteTemplateRegistry, templateName ), frameClock )
+    sprite = createSprite( getTemplate( σ.spriteTemplateRegistry, templateName ), spriteName, frameClock, implementation )
     addSprite!(σ, sprite)
 
     return sprite
 end
+
+
+createSprite!(σ::SpriteRegistry, frameClock::FrameClock, templateName::String, spriteName::SpriteName) = createSprite!( σ, frameClock, templateName, spriteName, DefaultSpriteImpl )
 
 
 function addSprite!(σ::SpriteRegistry, sprite::Sprite)
@@ -44,7 +45,6 @@ function destroySprite!(σ::SpriteRegistry, spriteName::SpriteName)
     sprite = σ.registeredSprites[spriteName]
     close(sprite)
     pop!( σ.registeredSprites, spriteName )
-    enqueueSpriteEvent!( σ, SpriteEvent( SPRITE_DESTROY, spriteName, nothing, nothing ) )
 end
 
 
@@ -54,16 +54,8 @@ function getSpritesInRenderOrder(σ::SpriteRegistry) :: Vector{Sprite}
 end
 
 
+# FIXME: if it turns out the revese() call below messes up performance, replace it
 getSpritesInReverseRenderOrder(σ::SpriteRegistry) = reverse( getSpritesInRenderOrder(σ) )
-
-
-
-function dispatchSingleSpriteEvent(σ::SpriteRegistry, logicHandler::L, event::SpriteEvent) where L <: LogicHandler
-    if spriteExists( σ, event.name ) || event.eventType == SPRITE_DESTROY
-        handleSingleEventStats = @timed onEvent( logicHandler, event )
-        updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
-    end
-end
 
 
 function spriteExists(σ::SpriteRegistry, spriteName::SpriteName) :: Bool

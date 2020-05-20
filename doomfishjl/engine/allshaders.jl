@@ -5,7 +5,7 @@ include("/home/gil/doomfish/doomfishjl/opengl/ShaderProgram.jl")
 # this file should be 'include'-ed only after initGlfw() has been called in the
 # main initialization call.
 
-allShaders = Dict{String, ShaderProgram}(
+allShaders = NamedTuple{String, ShaderProgram}(
     "default" => ShaderProgram("default.vert", "default.frag")
     "sample" => ShaderProgram("sample.vert", "sample.frag")
 )

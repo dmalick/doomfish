@@ -1,46 +1,52 @@
-
 include("/home/gil/doomfish/pseudointerface/interface.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl")
 include("/home/gil/doomfish/doomfishjl/engine/GameLoopFrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/inputhandling.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
-
 
 @interface GlProgramBase begin
     mainWindow::GlWindow
     frameClock::GameLoopFrameClock
+    eventProcessor::EventProcessor
 end
 
 @abstractMethod( GlProgramBase, initialize )
 @abstractMethod( GlProgramBase, keyInputEvent ) # key::Int, action::Int, mods::Int
-@abstractMethod( GlProgramBase, mouseClickEvent ) # coord::TextureCoordinate, button::Int
+@abstractMethod( GlProgramBase, mouseInputEvent ) # coord::TextureCoordinate, button::Int
 # updateView could be called every frame, more than once per frame, less often, etc.
 # betamax: it must be idempotent (not sure you're using that word right Dom)
 @abstractMethod( GlProgramBase, updateView )
 # updateLogic will be called exactly once per logical frame, ie, once for frame 0, then once for frame 1, etc
 @abstractMethod( GlProgramBase, updateLogic )
-@abstractMethod( GlProgramBase, getWindowTitle )
-@abstractMethod( GlProgramBase, getWindowHeight )
-@abstractMethod( GlProgramBase, getWindowWidth )
-@abstractMethod( GlProgramBase, getDebugMode ) # TODO: get from command line property
+# @abstractMethod( GlProgramBase, getWindowTitle )
+# @abstractMethod( GlProgramBase, getWindowHeight )
+# @abstractMethod( GlProgramBase, getWindowWidth )
+# @abstractMethod( GlProgramBase, getDebugMode ) # TODO: get from command line property
 @abstractMethod( GlProgramBase, expensiveInitialize )
 @abstractMethod( GlProgramBase, close )
 
 
-function runGlProgram(program::GlProgramBase)
-    initGlfw( getDebugMode(program) )
+function runGlProgram(p::GlProgramBase)
+    initGlfw( getDebugMode(p) )
+    # FIXME(?) kinda don't like having to define these at runtime, but all they do is call a single other function,
+    # which was defined at parse time, so my guess is it's ok.
+    # we'll see.
+    mouseButtonCallback(window::Int64, button::Int, action::Int, mods::Int) = mouseInput( p.eventProcessor, window, action, button, mods )
+    keyCallback(window::Int64, key::Int, scancode::Int, action::Int, mods::Int) = keyInput( p.eventProcessor, action, key, mods )
     try
-        mainWindow = GlWindow( getWindowWidth(program), getWindowHeight(program), getWindowTitle(program),
+        mainWindow = GlWindow( getWindowWidth(p), getWindowHeight(p), getWindowTitle(p),
                       keyCallback, mouseButtonCallback, startFullscreen )
-        program.mainWindow = mainWindow
+        p.mainWindow = mainWindow
         try
             userInitStats = @timed begin
-                initialize(program)
+                initialize(p)
                 checkGlError()
 
                 # should accomplish the same thing as the betamax
-                renderPhaseBegin( program.mainWindow )
-                showInitialLoadingScreen( program )
-                renderPhaseEnd( program.mainWindow )
+                renderPhaseBegin( p.mainWindow )
+                showInitialLoadingScreen( p )
+                renderPhaseEnd( p.mainWindow )
 
                 # WARNING: betamax code is kinda funky here:
                 # try (GlWindow.RenderPhase __unused_context = mainWindow.renderPhase()) {
@@ -48,23 +54,23 @@ function runGlProgram(program::GlProgramBase)
                 #         }
 
                 checkGlError()
-                expensiveInitialize(program)
+                expensiveInitialize(p)
                 checkGlError()
                 @debug "User initialization done"
             end
             updateStats!( metrics, USER_INIT, userInitStats )
-            resetLogicFrames(program.frameClock)
+            resetLogicFrames( p.frameClock )
             try
-                while !getShouldClose(program.mainWindow)
-                    loopOnce(program)
+                while !shouldClose( p.mainWindow )
+                    loopOnce(p)
                 end
             finally
-                closeWindow(program.mainWindow)
+                closeWindow( p.mainWindow )
             end
         catch err
             @error "exiting due to exception $err"
         finally
-            close(program)
+            close(p)
         end
     finally
         shutdownGlfw()
@@ -78,35 +84,16 @@ function showInitialLoadingScreen(loadingTexture::Texture, shader::ShaderProgram
 end
 
 
-# TODO: may need to adjust what this does w/ 'window'
-function mouseButtonCallback(program::GlProgramBase, window::Int64, button::Int, action::Int, mods::Int)
-    if action == GLFW.PRESS
-        coord = getCursorPosition(window)
-        if coord |> isValidCoordinate
-            mouseClickEvent(program, coord, button)
-        else
-            @warn "Out of bounds $coord due to excessively delayed handling of mouse click"
-        end
-    end
-end
-
-
-getCursorPosition(program::GlProgramBase) = getCursorPosition(program.mainWindow)
-
-
-keyCallback(window::Int64, key::Int, scancode::Int, action::Int, mods::Int) = keyInputEvent(key, action, mods)
-
-
 reportMetrics() = return Dict{StatsName, Dict{StatsFieldName,String}}( Stats.name => StatsAnalysis(Stats)
                                                                                  for Stats in values( metrics.statContainers ))
 
-closeWindow(program::GlProgramBase) = shouldClose( program.mainWindow, true )
+closeWindow(p::GlProgramBase) = setShouldClose( p.mainWindow, true )
 
 
-pollEvents(program::GlProgramBase) = pollEvents( program.mainWindow )
+pollEvents(p::GlProgramBase) = pollEvents( p.mainWindow )
 
 
-function loopOnce(program::GlProgramBase)
+function loopOnce(p::GlProgramBase)
     idleTimeStats = @timed begin
         idleTime5sStats = @timed begin
             if !sleepTilNextLogicFrame() metrics.counters.skippedFramesByRenderCounter += 1 end
@@ -133,8 +120,8 @@ function loopOnce(program::GlProgramBase)
                     # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
                     # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
                     # implementation.
-                    beginLogicFrame!(program.frameClock)
-                    updateLogic(program)
+                    beginLogicFrame!( p.frameClock )
+                    updateLogic(p)
                 end
                 updateStats!( metrics, LOGIC, logicStats )
                 # betamax:
@@ -143,15 +130,15 @@ function loopOnce(program::GlProgramBase)
                 # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
                 # implementation.
                 skippingFrames = true
-                if moreLogicFramesNeeded( program.frameClock ) continue
+                if moreLogicFramesNeeded( p.frameClock ) continue
                 else break end
             end
         end
         updateStats!( metrics, FULL_LOGIC, fullLogicStats )
         renderStats = @timed begin
-            renderPhaseBegin( program.mainWindow )
-            updateView( program )
-            renderPhaseEnd( program.mainWindow )
+            renderPhaseBegin( p.mainWindow )
+            updateView( p )
+            renderPhaseEnd( p.mainWindow )
         end
         updateStats!( metrics, RENDER, renderStats )
     end

@@ -22,10 +22,10 @@ function setPaused!(clock::GameLoopFrameClock, paused::Bool)
     if clock.paused == paused
         return
     elseif paused
-        @info "paused"
-    else
         # we need to ignore the time spent in pause, otherwise we'll get a flood of catch up logic frames
         # and rendering will appear to skip
+        @info "paused"
+    else
         resetLogicFrames!(clock)
         @info "unpaused"
     end
