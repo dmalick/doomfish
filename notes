@@ -1,0 +1,9 @@
+
+
+3-15-20
+
+opengl, metrics, imageio, and graphics are all in good shape for now. The goal now is to adjust
+the sprite package to better fit our needs. In Java the OOP way is the only way but I've had
+success doing the above packages more functionally. They translate very easily. The sprite,
+scripting, and engine packages on the other hand are a bit trickier to translate. I'm prepared
+to try though, if only to reduce dependence on singleton objects.
