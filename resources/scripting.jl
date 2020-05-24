@@ -4,7 +4,7 @@ include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl") # includes 
 globalScriptWorld = nothing
 
 # basic utility functions
-log(msg::String) = @debug("[ScriptServicer] $msg")
+log(msg::String) = @debug("[Script] $msg")
 fatal(msg::String) = error("Fatal script error: $msg")
 
 function normalExit()
