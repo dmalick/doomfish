@@ -28,7 +28,6 @@ struct DoomfishGlProgram <: GlProgramBase
     # scriptWorld::ScriptWorld
     spriteRegistry::SpriteRegistry
     # highlightedSprite::Union{SpriteName, Nothing}
-    eventProcessor::EventProcessor
     scriptWorld::ScriptWorld
 
     pausedTexture::Texture
@@ -182,7 +181,8 @@ end
 
 function updateLogic(p::DoomfishGlProgram)
     try
-        if !p.frameClock.paused dispatchEvents!( p.eventProcessor, p.scriptWorld ) end
+        # XXX the dispatchEvents() call below alone makes me think the whole ScriptWorld / EventProcessor thing is way off.
+        if !p.frameClock.paused dispatchEvents!( p.scriptWorld.eventProcessor, p.scriptWorld ) end
     catch e
         handleCrash(e)
     end

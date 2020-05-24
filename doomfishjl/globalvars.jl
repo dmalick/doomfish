@@ -30,6 +30,7 @@ const usePrecompiledManifests = true
 const textureMaxFramesForResidentMemoryStrategy = 10
 const texturePreloadFrameLookahead = 16
 
+const defaultGlobalShaderName = nothing
 
 # state variables
 

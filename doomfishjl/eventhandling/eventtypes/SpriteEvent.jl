@@ -9,22 +9,6 @@ include("Event.jl")
  way for a thing that has no polymorphic methods applicable anyway that belong here.
  =#
 
-@Enum SpriteEventType begin
-        # sprite events, specific to exactly one sprite
-        SPRITE_CREATE
-        SPRITE_DESTROY
-
-        SPRITE_CLICK
-
-        SPRITE_KEY_PRESSED
-        SPRITE_KEY_RELEASED
-        SPRITE_KEY_REPEATED
-
-        SPRITE_COLLIDE
-
-        SPRITE_MOMENT
-end
-
 struct SpriteEvent <: Event
         eventType::SpriteEventType
         spriteName::SpriteName

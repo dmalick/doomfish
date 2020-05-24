@@ -1,42 +1,42 @@
 include("/home/gil/doomfish/doomfishjl/scripting/LogicHandler.jl")
-include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl") # includes FrameClock
 include("inputtypes/Input.jl")
-include("eventtypes/Event.jl")
+include("QueuedEvent.jl")
 
 
-# XXX I'm really not sure why we dispatch sprite moment events first before dispatching
-# other enqueued events.
+# This structure has been simplified significantly. What the EventProcessor now
+# does is map inputs to events and events to callbacks, and tell the LogicHandler what
+# events to invoke based on the gamestate, and the order in which to invoke them.
+# We no longer reference specific types of events or inputs anywhere. We'll let
+# the LogicHandler (whatever it may be) deal w/ that. Events and Inputs being
+# abstract types, and the LogicHandler being an interface, any number of varying
+# structures can be built around this single EventProcessor.
 
 
 struct EventProcessor
 
-    clock::FrameClock
-    spriteRegistry::SpriteRegistry
+    inputMap::Dict{ Input, Event }
+    inputQueue::Vector{ Input }
 
-    registeredEvents::Dict{Event, Function}
-    enqueuedEvents::Vector{Event}
+    registeredEvents::Dict{ Event, Function }
+    enqueuedEvents::Vector{ QueuedEvent }
 
-    inputMap::Dict{Input, Event}
-    inputQueue::Vector{Input}
+    # WARNING before I shrunk this significantly, we kept track of the last dispatched moment w/ a variable here.
+    # may need to keep track of it somewhere else (like the LogicHandler).
 
-    # we track the last dispatched moment so that if logic is paused, the same frame can be processed many times
-    # but moment events get dispatched just once
-    lastDispatchedMoment::Int
-    alreadyBegun::Bool # = false
     acceptingRegistrations::Bool # = false
 
-    EventProcessor(spriteRegistry::SpriteRegistry, frameClock::FrameClock) = new( frameClock, spriteRegistry,
-        Dict{Event, Function}(), Vector{Event}(), Dict{Input, Event}(), Vector{Input}(), 0, false, false )
+    EventProcessor() = new( Dict{Input, Event}(), Vector{Input}(), Dict{Event, Function}(), Vector{QueuedEvent}(), false )
 end
 
 
-enqueueInput!(ϵ::EventProcessor, input::Input) = haskey(ϵ.registeredEvents) ? pushfirst!( ϵ.inputQueue, input ) : return
+# we use the popfirst! / push! style queue to be consistent w/ the event queue
+enqueueInput!(ϵ::EventProcessor, input::Input) = haskey( ϵ.inputMap ) ? push!( ϵ.inputQueue, input ) : return
 
 
 function processInputs!(ϵ::EventProcessor)
     while !(ϵ.inputQueue |> isempty)
-        # we use the pushfirst! / pop! style queue to be consistent w/ the event queue
-        enqueueEvent!( ϵ, ϵ.inputMap[ pop!(p.inputQueue) ] )
+        # we use the popfirst! / push! style queue to be consistent w/ the event queue
+        enqueueEvent!( ϵ, ϵ.inputMap[ popfirst!(p.inputQueue) ] )
     end
 end
 
@@ -47,7 +47,7 @@ function registerEvent!(ϵ::EventProcessor, event::Event, callback::Function; in
     # callbacks should be set up during script initialization, initial sprites should be drawn during onBegin
     # (so if state is saved onBegin can just be skipped and the sprite stack can be restored)
     checkArgument( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
-    checkArgument( !haskey(ϵ.registeredEvents, event), "event $event already registered in EventProcessor.registeredEvents" ) )
+    checkArgument( !haskey( ϵ.registeredEvents, event ), "event $event already registered in EventProcessor.registeredEvents" ) )
     ϵ.registeredEvents[event] = callback
     if nothing != input
         ϵ.inputMap[input] = event
@@ -57,7 +57,7 @@ end
 
 function enqueueEvent!(ϵ::EventProcessor, event::Event)
     checkArgument( event in keys( ϵ.registeredEvents ) , "event $event not registered in EventProcessor.registeredEvents" )
-    pushfirst!( ϵ.enqueuedEvents, event )
+    push!( ϵ.enqueuedEvents )
 end
 
 
@@ -65,74 +65,34 @@ function dispatchEvents!(ϵ::EventProcessor, logicHandler::L) where L <: LogicHa
     # betamax:
     # TODO I'm not sure the choreography is consistent yet of making sure you get events
     # in a well defined order, which I care about because of rewing/replay, particularly the first moment#0 event
-    # XXX I'M not sure doing these separately is the right way to go at all.
-    # I suppose it's possible queueing events by type is safer.
 
-    # FIXME: I now think the way to go is to rig a priority queue-like thing by sort()ing / filter()ing events
-    # out of the event queue by type, depending on what order we want specific events to resolve in.
+    # We're now using a sort of naive priority queue, so this may no longer be an issue
 
-    dispatchSpriteMomentEvents( ϵ.spriteRegistry, logicHandler )
-    dispatchBeginEvent( ϵ, logicHandler )
     while !(ϵ.enqueuedEvents |> isEmpty)
         dispatchEnqueuedEvents!( ϵ, logicHandler )
     end
-    propagate( ϵ, logicHandler )
+    propagate( logicHandler )
 end
 
 
-function dispatchBeginEvent(ϵ::EventProcessor, logicHandler::L) where L <: LogicHandler
-    if ! ϵ.alreadyBegun
-        ϵ.alreadyBegun = true
-        onBegin(logicHandler)
-        resetLogicFrames(ϵ.clock)
-    end
-end
-
-
-function propagate(ϵ::EventProcessor, logicHandler::L) where L <: LogicHandler
+function propagate(logicHandler::L) where L <: LogicHandler
     propagationStats =  @timed onEvent( logicHandler, GlobalEvent( PROPAGATE ) )
     updateStats!( metrics, HANDLE_PROGPAGATION_EVENT, propagationStats )
 end
 
 
-function dispatchSpriteMomentEvents(ϵ::EventProcessor, logicHandler::L) where L <: LogicHandler
-    if ϵ.lastDispatchedMoment == ϵ.clock.currentFrame
-        # betamax:
-        # we first generate the events then process them, because otherwise
-        # if a script creates or destroys a sprite, orderedSprites will be modified
-        # while we are iterating over orderedSprites, resulting in a ConcurrentModificationException
-        # ...ask me how i know
-        spriteMomentEvents = filter( event-> event.eventType == SPRITE_MOMENT, keys( ϵ.registeredEvents ) )
-        dispatchSingleSpriteEvent.( ϵ.spriteRegistry, logicHandler, spriteMomentEvents )
-    end
-    spriteRegistry.lastDispatchedMoment = getCurrentFrame(frameClock)
-end
-
-
-function dispatchSingleSpriteEvent(ϵ::EventProcessor, logicHandler::L, event::SpriteEvent) where L <: LogicHandler
-    if spriteExists( ϵ.spriteRegistry, event.name ) || event.eventType == SPRITE_DESTROY
-        handleSingleEventStats = @timed onEvent( logicHandler, event )
-        updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
-        enqueueEvent!( ϵ, logicHandler, event )
-    end
-end
-
-
 function dispatchEnqueuedEvents!(ϵ::EventProcessor, logicHandler::L) where L <: LogicHandler
+    sort!( ϵ.enqueuedEvents )
     while !(ϵ.enqueuedEvents |> isEmpty)
-        # we use the pushfirst! / pop! (last element first, 2nd-to-last element second, etc) style queue
+        # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
         # so that when we sort it by priority we don't have to reverse the sort order
-        dispatchSingleEvent( ϵ, logicHandler, pop!(ϵ.enqueuedEvents) )
-
+        dispatchedEvent = popfirst!(ϵ.enqueuedEvents).event
+        dispatchSingleEvent( ϵ, logicHandler, dispatchedEvent )
     end
 end
 
 
 function dispatchSingleEvent(ϵ::EventProcessor, logicHandler::L, event::Event) where L <: LogicHandler
-    if event isa SpriteEvent
-        dispatchSingleSpriteEvent( ϵ.spriteRegistry, logicHandler, event )
-    else
-        handleSingleEventStats = @timed onEvent( logicHandler, event )
-        updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
-    end
+    handleSingleEventStats = @timed onEvent( logicHandler, event )
+    updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
 end

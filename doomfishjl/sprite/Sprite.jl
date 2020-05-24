@@ -12,6 +12,7 @@ include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplate.jl")
     creationSerial::Int
 end
 
+@abstractMethod( Sprite, getCurrentFrame )
 @abstractMethod( Sprite, close )
 @abstractMethod( Sprite, toSnapshot )
 # TODO: sound

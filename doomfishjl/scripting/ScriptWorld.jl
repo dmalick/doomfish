@@ -15,7 +15,7 @@ struct ScriptWorld <: LogicHandler
 
     initializing::Bool
     rebootFlag::Bool
-
+    ScriptWorld(eventProcessor) = new( eventProcessor, Dict{String, Any}(), defaultGlobalShaderName, true, false )
 end
 
 
@@ -55,6 +55,7 @@ function loadScripts(σ::ScriptWorld, scriptNames::Vector{String})
         checkArgument( scriptName |> isfile, "invalid script path: $scriptName" )
         loadScript(σ, scriptName)
     end
+    σ.initializing = false
 end
 
 
@@ -63,7 +64,6 @@ function loadScript(σ::ScriptWorld, scriptName::String)
     σ.eventProcessor.acceptingCallbacks = true
     @info "Evaluating script from $scriptName"
     include(scriptName)
-    finishInit(σ.servicer)
     σ.eventProcessor.acceptingCallbacks = false
 end
 
@@ -82,8 +82,8 @@ getRegisteredEvents(σ::ScriptWorld) = return σ.eventProcessor.registeredEvents
 getRegisteredEvents(σ::ScriptWorld, type::Type{Event}) = filter( (event)-> typeof(event.first) == type, getRegisteredEvents(σ) )
 
 
-getCallbacks(σ::ScriptWorld) = return values( σ.registeredEvents )
-getCallbacks(σ::ScriptWorld, eventType::Type{Event}) = [ event.second for event in getRegisteredEvents(σ) if typeof(event.first) == eventType ]
+getCallbacks(σ::ScriptWorld) = return values( σ.eventProcessor.registeredEvents )
+getCallbacks(σ::ScriptWorld, eventType::Type{Event}) = [ (event.second) for event in getRegisteredEvents(σ) if typeof(event.first) == eventType ]
 
 
 getGlobalShader(σ::ScriptWorld) = getGlobalShaderName( σ.globalShader )
