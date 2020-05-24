@@ -72,6 +72,7 @@ function addTemplate!(str::SpriteTemplateRegistry, name::String) :: SpriteTempla
 end
 
 
+# XXX I don't like this side-effects bullshit
 function getTemplate!(str::SpriteTemplateRegistry, name::String) :: SpriteTemplate
     addTemplate!( str, name )
     return str.registeredTemplates[name]

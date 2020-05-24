@@ -29,8 +29,8 @@ end
 
 function runGlProgram(p::GlProgramBase)
     initGlfw( getDebugMode(p) )
-    # FIXME(?) kinda don't like having to define these at runtime, but all they do is call a single other function,
-    # which was defined at parse time, so my guess is it's ok.
+    # FIXME(?) kinda don't like having to define these at runtime, but all they do is call single other functions,
+    # which were defined at parse time, so my guess is it's ok.
     # we'll see.
     mouseButtonCallback(window::Int64, button::Int, action::Int, mods::Int) = mouseInput( p.eventProcessor, window, action, button, mods )
     keyCallback(window::Int64, key::Int, scancode::Int, action::Int, mods::Int) = keyInput( p.eventProcessor, action, key, mods )

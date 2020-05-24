@@ -8,20 +8,41 @@ include("LogicHandler.jl")
 
 struct ScriptWorld <: LogicHandler
 
+    clock::FrameClock
+
+    spriteRegistry::spriteRegistry
     eventProcessor::EventProcessor
 
+    callbacks::Dict{Event, Function}
     stateVariables::Dict{String, Any}
     globalShaderName::Union{String, Nothing}
 
     initializing::Bool
+    acceptingRegistrations::Bool
     rebootFlag::Bool
-    ScriptWorld(eventProcessor) = new( eventProcessor, Dict{String, Any}(), defaultGlobalShaderName, true, false )
+    ScriptWorld(σ::SpriteRegistry, ϵ::EventProcessor, f::frameClock) = new( f, σ, ϵ, Dict{String, Any}(),
+                                                       defaultGlobalShaderName, true, false )
+end
+
+
+# I made the decision to keep registerCallback!() in ScriptWorld instead of putting it in the EventProcessor b/c
+# the callbacks really have nothing to do w/ anything but scripts, and how the LogicHandler (in this case ScriptWorld)
+# deals w/ them in the first place seems too implementation-specific to hardcode into something concrete
+# like the EventProcessor.
+function registerCallback!(σ::ScriptWorld, event::Event, callback::Function)
+    # this should only be callable prior to onBegin, you should not be able to dynamically add callbacks
+    # during the game, this would make saving/loading/rewinding/fast forwarding state intractable
+    # callbacks should be set up during script initialization, initial sprites should be drawn during onBegin
+    # (so if state is saved onBegin can just be skipped and the sprite stack can be restored)
+    checkArgument( σ.acceptingRegistrations, "cannot register events after world has already begun" )
+    checkArgument( !haskey( σ.callbacks, event ), "event $event already registered in ScriptWorld.callbacks" ) )
+    σ.callbacks[event] = callback
 end
 
 
 function getCallback(σ::Scriptworld, event::Event)
-    checkArgument( haskey(σ.eventProcessor, event), "event $event not registered in $(σ.eventProcessor.registeredEvents)" )
-    return σ.eventProcessor.registeredEvents[event]
+    checkArgument( haskey(σ.callbacks, event), "event $event not registered in $(σ.callbacks)" )
+    return σ.callbacks[event]
 end
 
 
@@ -61,10 +82,10 @@ end
 
 # WARNING: not sure the "include" below will do quite what I want it to
 function loadScript(σ::ScriptWorld, scriptName::String)
-    σ.eventProcessor.acceptingCallbacks = true
+    σ.eventProcessor.acceptingRegistrations = true
     @info "Evaluating script from $scriptName"
     include(scriptName)
-    σ.eventProcessor.acceptingCallbacks = false
+    σ.eventProcessor.acceptingRegistrations = false
 end
 
 
@@ -79,11 +100,11 @@ end
 
 
 getRegisteredEvents(σ::ScriptWorld) = return σ.eventProcessor.registeredEvents
-getRegisteredEvents(σ::ScriptWorld, type::Type{Event}) = filter( (event)-> typeof(event.first) == type, getRegisteredEvents(σ) )
+getRegisteredEvents(σ::ScriptWorld, type::Type{T}) where T <: Event = filter( (event)-> typeof(event.first) == type, getRegisteredEvents(σ) )
 
 
 getCallbacks(σ::ScriptWorld) = return values( σ.eventProcessor.registeredEvents )
-getCallbacks(σ::ScriptWorld, eventType::Type{Event}) = [ (event.second) for event in getRegisteredEvents(σ) if typeof(event.first) == eventType ]
+getCallbacks(σ::ScriptWorld, eventType::Type{T}) where T <: Event = [ (event.second) for event in getRegisteredEvents(σ) if typeof(event.first) == eventType ]
 
 
 getGlobalShader(σ::ScriptWorld) = getGlobalShaderName( σ.globalShader )

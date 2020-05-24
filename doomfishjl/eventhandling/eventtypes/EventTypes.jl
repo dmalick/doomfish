@@ -31,7 +31,7 @@ end
 end
 
 
-# WARNING the ; suppresses the "show_datatype" call, which causes a crash w/ a union of
+# WARNING the `;` suppresses the "show_datatype" call, which causes a crash w/ a union of
 # more than one enum.
-# are you fucking serious Julia?
+# seems like you oughta deal w/ that, Julia.
 EventType = Union{SpriteEventType, GlobalEventType};

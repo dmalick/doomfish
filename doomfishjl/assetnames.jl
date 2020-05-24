@@ -8,11 +8,18 @@ struct TextureName <: AssetName
     filename::String
 end
 
+struct MeshName <: AssetName
+    filename::String
+
 struct SoundName <: AssetName
     filename::String
 end
 
 struct SpriteName <: AssetName
+    name::String
+end
+
+struct ModelName <: AssetName
     name::String
 end
 

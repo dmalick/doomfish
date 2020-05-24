@@ -10,7 +10,7 @@ include("/home/gil/doomfish/doomfishjl/eventhandling/ScriptWorld.jl")
 
 TODO: EVENT-SPECIFIC CALLBACK REGISTERS GO HERE
 
-or not
+XXX or not
 
 =#
 
@@ -20,25 +20,27 @@ or not
 
 function getSpriteByName(σ::ScriptWorld, spriteName::SpriteName)
     checkInit(σ)
-    return getSpriteByName( σ.eventProcessor, spriteName )
+    return getSpriteByName( σ.spriteRegistry, spriteName )
 end
 
 
 function spriteExists(σ::ScriptWorld, spriteName::SpriteName)
     checkInit(σ)
-    return spriteExists( σ.eventProcessor, spriteName )
+    return spriteExists( σ.spriteRegistry, spriteName )
 end
 
-
+# TODO: this currently just creates a sprite of type DefaultSpriteImpl.
+# make it take any.
+# in fact, maybe specific implementations should be carried around w/ their templates?
 function createSprite(σ::ScriptWorld, templateName::String, spriteName::SpriteName)
     checkInit(σ)
-    createSprite( σ.eventProcessor, templateName, spriteName )
+    createSprite( σ.eventProcessor, σ.spriteRegistry, σ.clock, templateName, spriteName )
 end
 
 
 function destroySprite(σ::ScriptWorld, spriteName::SpriteName)
     checkInit(σ)
-    destroySprite( σ.eventProcessor, spriteName)
+    destroySprite( σ.eventProcessor, σ.spriteRegistry, spriteName )
 end
 
 
@@ -47,9 +49,9 @@ end
 
 function loadSpriteTemplate(σ::ScriptWorld, templateName::String)
     checkInit(σ)
-    loadSpriteTemplate( σ.eventProcessor, templateName )
+    loadTemplate( σ.spriteRegistry, templateName )
 end
 
-getFrameCount(σ::ScriptWorld, templateName::String) = return getSpriteTemplate( σ.eventProcessor, templateName ).frameCount
+getFrameCount(σ::ScriptWorld, templateName::String) = return loadSpriteTemplate( σ, templateName ).frameCount
 
-getNamedMoment(σ::ScriptWorld, templateName::String, momentName::String) = getNamedMoment(σ.eventProcessor, templateName, momentName)
+getNamedMoment(σ::ScriptWorld, templateName::String, momentName::String) = getNamedMoment( σ.spriteRegistry, templateName, momentName )

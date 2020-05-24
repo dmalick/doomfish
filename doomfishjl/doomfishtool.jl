@@ -101,8 +101,8 @@ function cachedFilename(key::String...)
         strings *= "\n"
     end
     # WARNING! The hard-coded UUID below defines the namespace
-    # for GENERATING and RETRIEVING texture file IDs.
-    # Changing will result in nullification of the entire texture cache!
+    # for GENERATING and RETRIEVING asset file IDs.
+    # Changing will result in nullification of the entire asset cache!
     uuid = uuid5(UUID("c3fabaa7-2973-4de2-9511-a7c022f329b6"), strings)
     return textureCacheDir*string(uuid)*".dat"
 end

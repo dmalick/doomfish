@@ -4,6 +4,7 @@ include("/home/gil/doomfish/doomfishjl/imageio/ColorSample.jl")
 include("/home/gil/doomfish/doomfishjl/imageio/TextureImage.jl")
 include("/home/gil/doomfish/doomfishjl/imageio/TextureImagesIO.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
+include("AssetProxy.jl")
 
 # betamax:
 #=  A proxy for a TextureImage that may or may not actually be loaded into RAM at any given time
@@ -11,7 +12,7 @@ include("/home/gil/doomfish/doomfishjl/opengl/coordinates.jl")
  =#
 
 
-struct LazyTextureImage
+struct LazyTextureImage <: AssetProxy
     # betamax: TODO get rid of this lock
     # we'll see
     LOCK::ReentrantLock
@@ -33,7 +34,7 @@ end
 
 function getPixel(ltimage::LazyTextureImage, coordinate::TextureCoordinate) :: ColorSample
     lock(ltimage.LOCK)
-    checkLoaded(image)
+    checkLoaded(ltimage)
     pixel =  getTexturePixel( ltimage.textureImage, coordinate )
     unlock(ltimage.LOCK)
     return pixel
@@ -42,7 +43,7 @@ end
 
 function getByteCount(ltimage::LazyTextureImage) :: Int
     lock(ltimage.LOCK)
-    checkLoaded(image)
+    checkLoaded(ltimage)
     return getByteCount( ltimage.textureImage )
     unlock(ltimage.LOCK)
 end
