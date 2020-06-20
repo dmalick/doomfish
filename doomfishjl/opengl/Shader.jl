@@ -10,14 +10,14 @@ struct Shader
 end
 
 function loadAndCompileShader(filename::String, shaderType::UInt32)
-    shaderSource::String = loadResource(filename)
-    shader::UInt32 = glCreateShader(shaderType)
-    glShaderSource(shader, shaderSource)
+    shaderSource::String = read( filename, String )
+    shader::UInt32 = glCreateShader( shaderType )
+    glShaderSource( shader, shaderSource )
     glCompileShader(shader)
 
-    status = glGetShaderiv(shader, GL_COMPILE_STATUS)
+    status = glGetShaderiv( shader, GL_COMPILE_STATUS )
     @info "glShaderiv(shader, GL_COMPILE_STATUS) return val = $status"
-    checkState(status==GL_TRUE, "shader $(filename) failed to compile")
+    checkState( status==GL_TRUE, "shader $(filename) failed to compile" )
 
     return Shader(shader)
 end

@@ -42,12 +42,9 @@ include("/home/gil/doomfish/doomfishjl/engine/GameplaySnapshot.jl")
 
 function renderTemplate(spriteTemplate::SpriteTemplate, whichFrame::Int, location::TextureCoordinate, shaderProgram::ShaderProgram)
     texture = textures[ whichFrame ]
-
-    textureRenderStats = @timed render( texture, location, shaderProgram )
-    updateStats!( metrics, TEXTURE_RENDERING, textureRenderingStats )
-
-    textureAfterRenderStats = @timed afterRender( spriteTemplate.textureRegistry, spriteTemplate.memoryStrategy, texture )
-    updateStats!( metrics, TEXTURE_AFTER_RENDER )
+    
+    @collectstats TEXTURE_RENDERING render( texture, location, shaderProgram )
+    @collectstats TEXTURE_AFTER_RENDER afterRender( spriteTemplate.textureRegistry, spriteTemplate.memoryStrategy, texture )
 end
 
 

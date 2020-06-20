@@ -6,7 +6,7 @@ include("coordinates.jl")
 mutable struct GlWindow
     debugMode::Bool
 
-    handle::Union{GLFW.Window, Nothing}
+    handle::GLFW.Window
     width::UInt32
     height::UInt32
     title::String
@@ -18,6 +18,7 @@ end
 # have to call this exactly once before any window can be created
 function initGlfw(debugMode::Bool)
     if debugMode
+        JULIA_DEBUG = Main
         # original betamax code:
         # // enable glfw debugging
 
@@ -29,21 +30,19 @@ function initGlfw(debugMode::Bool)
         # // we don't yet use MemoryUtils
         # // Configuration.DEBUG_MEMORY_ALLOCATOR.set(true);
     end
-    checkState(GLFW.Init(), "could not initialize GLFW")
+    checkState( GLFW.Init(), "GLFW failed to initialize" )
 end
+
 
 # have to call this exactly once upon terminate. No windows can be subsequently created
-function shutdownGlfw()
-    GLFW.Terminate()
-end
+shutdownGlfw() = GLFW.Terminate()
 
-function GlWindow(windowWidth::Int, windowHeight::Int, title::String,
-                     keyCallback::Function, mouseButtonCallback::Function, fullscreen::Bool)
-    glWindow = GlWindow(false, nothing, windowWidth, windowHeight, title, false, fullscreen)
-    glWindow.handle = createWindow(glWindow)
 
-    GLFW.SetKeyCallback(glWindow.handle, keyCallback)
-    GLFW.SetMouseButtonCallback(glWindow.handle, mouseButtonCallback)
+function GlWindow(width::Int, height::Int, title::String, keyCallback::Function, mouseButtonCallback::Function, fullscreen::Bool)
+    glWindow = createWindow( width, height, title, fullscreen )
+
+    GLFW.SetKeyCallback( glWindow.handle, keyCallback )
+    GLFW.SetMouseButtonCallback( glWindow.handle, mouseButtonCallback )
 
     checkGlError()
     # original betamax code: LOG.debug("Created and showed window {} and completed setup of OpenGL context", windowHandle);
@@ -52,7 +51,7 @@ function GlWindow(windowWidth::Int, windowHeight::Int, title::String,
 end
 
 
-function createWindow(glWindow::GlWindow)
+function createWindow(width::Int, height::Int, title::String, fullscreen::Bool) :: GlWindow
     GLFW.DefaultWindowHints()
     GLFW.WindowHint(GLFW.RESIZABLE, false)
     # we'll hide the window til we're done making it.
@@ -60,35 +59,39 @@ function createWindow(glWindow::GlWindow)
     GLFW.WindowHint(GLFW.CONTEXT_VERSION_MAJOR, 3)
     GLFW.WindowHint(GLFW.CONTEXT_VERSION_MINOR, 2)
     GLFW.WindowHint(GLFW.OPENGL_PROFILE, GLFW.OPENGL_CORE_PROFILE)
-    if glWindow.debugMode
+    if debugMode
         GLFW.WindowHint(GLFW.OPENGL_DEBUG_CONTEXT, true)
     end
 
-    createdWindowHandle = glWindow.fullscreen ?
-        GLFW.CreateWindow(glWindow.width, glWindow.height, glWindow.title, GLFW.GetPrimaryMonitor()) :
-        GLFW.CreateWindow(glWindow.width, glWindow.height, glWindow.title)
-    checkState(nothing!=createdWindowHandle, "window not created")
-    if !glWindow.fullscreen
-        centerWindow(glWindow, createdWindowHandle)
+    createdWindowHandle = fullscreen ?
+        GLFW.CreateWindow( width, height, title, GLFW.GetPrimaryMonitor() ) :
+        GLFW.CreateWindow( width, height, title )
+    checkState( nothing != createdWindowHandle, "window not created" )
+
+    glWindow = GlWindow( debugMode, createdWindowHandle, width, height, title, false, fullscreen )
+
+    if !fullscreen
+        centerWindow(glWindow)
     end
 
-    if !systemVars.showSystemCursor
-        GLFW.SetInputMode(createdWindowHandle, GLFW.CURSOR, GLFW.CURSOR_HIDDEN)
+    if !showSystemCursor
+        GLFW.SetInputMode( createdWindowHandle, GLFW.CURSOR, GLFW.CURSOR_HIDDEN )
     end
 
     GLFW.MakeContextCurrent(createdWindowHandle)
     GLFW.ShowWindow(createdWindowHandle)
     #TODO: in java there is the line GL.createCapabilities(). Does this matter to us?
+    # the command doesn't seem to exist in any of the Julia modules
     GLFW.SwapInterval(1) # wait for vsync (or whatever) when swapping buffers
 
-    if glWindow.debugMode
+    if debugMode
         # enable opengl debugging
         # original betamax code:
         # GlDebugMessages.setupJavaStyleDebugMessageCallback(LOG);
         # // glDisable(GL_CULL_FACE);
     end
 
-    return createdWindowHandle
+    return glWindow
 
 end
 
@@ -97,28 +100,28 @@ function shouldClose(glWindow::GlWindow)
     return GLFW.WindowShouldClose( glWindow.handle )
 end
 
-function centerWindow(glWindow::GlWindow, createdWindowHandle::GLFW.Window)
-    vidmode = GLFW.GetVideoMode(GLFW.GetPrimaryMonitor()) # returns the resolution
-    GLFW.SetWindowPos(createdWindowHandle,
-                                (vidmode.width ÷ glWindow.width) ÷ 2,
-                                (vidmode.height ÷ glWindow.height) ÷ 2)
+function centerWindow(glWindow::GlWindow)
+    vidmode = GLFW.GetVideoMode( GLFW.GetPrimaryMonitor() ) # returns the resolution
+    GLFW.SetWindowPos( glWindow.handle,
+                      (vidmode.width ÷ glWindow.width) ÷ 2,
+                      (vidmode.height ÷ glWindow.height) ÷ 2 )
 end
 
 function setShouldClose(glWindow::GlWindow, shouldClose::Bool)
-    checkstate(!glWindow.isDestroyed)
-    GLFW.SetWindowShouldClose(glWindow.handle, shouldClose)
+    checkstate( !glWindow.isDestroyed )
+    GLFW.SetWindowShouldClose( glWindow.handle, shouldClose )
 end
 
 function closeWindow(glWindow::GlWindow)
-     checkState(!glWindow.isDestroyed)
-     GLFW.DestroyWindow(glWindow.handle)
+     checkState( !glWindow.isDestroyed )
+     GLFW.DestroyWindow( glWindow.handle )
      # original betamax code: glfwFreeCallbacks(windowHandle);
      glWindow.isDestroyed = true
 end
 
 function windowToTextureCoordinate(glWindow::GlWindow, x::Float64, y::Float64)
     if glWindow.fullscreen
-        vidmode = GLFW.GetVideoMode(GLFW.GetPrimaryMonitor)
+        vidmode = GLFW.GetVideoMode( GLFW.GetPrimaryMonitor )
         fieldWidth = vidmode.width
         fieldHeight = vidmode.height
     else
@@ -126,81 +129,58 @@ function windowToTextureCoordinate(glWindow::GlWindow, x::Float64, y::Float64)
         fieldHeight = glWindow.height
     end
 
-    return TextureCoordinate(x / fieldWidth, 1.0 - y / fieldHeight)
+    return TextureCoordinate( x / fieldWidth, 1.0 - y / fieldHeight )
 end
 
-
-# the below betamax code is full of javaisms w/ no literal translation in julia. my guess is this will work.
 
 # WARNING mouse cursor coordinates are wrapped in separate DoubleBuffers in the original betamax code.
 # be aware that this may come to bite us.
 function getCursorPosition(glWindow::GlWindow)
-    cursorPosition = GLFW.GetCursorPos(glWindow.handle)
+    cursorPosition = GLFW.GetCursorPos( glWindow.handle )
     x = cursorPosition.x
     y = cursorPosition.y
-    return windowToTextureCoordinate(glWindow, x, y)
+    return windowToTextureCoordinate( glWindow, x, y )
+    # original betamax code:
+    # private final DoubleBuffer xMousePosBuffer = BufferUtils.createDoubleBuffer(1);
+    # private final DoubleBuffer yMousePosBuffer = BufferUtils.createDoubleBuffer(1);
+    # public TextureCoordinate getCursorPosition() {
+    #     glfwGetCursorPos(windowHandle, xMousePosBuffer, yMousePosBuffer);
+    #     double x = xMousePosBuffer.get(0);
+    #     double y = yMousePosBuffer.get(0);
+    #     return windowToTextureCoord(x,y);
 end
 
-# wrote the below based closely on the betamax code, but wonder whether the RenderPhase struct is necessary
-# struct RenderPhase end
-#
-# function renderPhaseClose(glWindow::GlWindow, renderPhase::RenderPhase)
-#     checkState(!glWindow.isDestroyed)
-#     checkGlError()
-#     GLFW.SwapBuffers(glWindow.handle)
-#     renderPhase = nothing
-# end
-#
-# function renderPhase(glWindow::GlWindow)
-#     checkState(!glWindow.isDestroyed)
-#     GLFW.MakeContextCurrent(glWindow.handle)
-#     checkGlError()
-#     return RenderPhase()
-# end
 
-# original betamax code:
-# private final DoubleBuffer xMousePosBuffer = BufferUtils.createDoubleBuffer(1);
-# private final DoubleBuffer yMousePosBuffer = BufferUtils.createDoubleBuffer(1);
-# public TextureCoordinate getCursorPosition() {
-#     glfwGetCursorPos(windowHandle, xMousePosBuffer, yMousePosBuffer);
-#     double x = xMousePosBuffer.get(0);
-#     double y = yMousePosBuffer.get(0);
-#     return windowToTextureCoord(x,y);
-# }
-#
-# public final class RenderPhase implements AutoCloseable {
-#     @Override public void close() {
-#         checkState(!isDestroyed);
-#         checkGlError();
-#         glfwSwapBuffers(windowHandle);
-#     }
-#     private RenderPhase(){}
-# }
-#
-# public GlWindow.RenderPhase renderPhase() {
-#     checkState(!isDestroyed);
-#     glfwMakeContextCurrent(windowHandle);
-#     checkGlError();
-#     return new RenderPhase();
-# }
+function pollEvents(glWindow::GlWindow)
+    checkState( !glWindow.isDestroyed )
+    GLFW.PollEvents()
+    checkGlError()
+end
+
+
+macro renderPhase(glWindow, body)
+    # checkArgument( glWindow isa Symbol || glWindow.head === :., "first argument to @renderPhase must be a GlWindow; got $glWindow" )
+    # checkArgument( eval( glWindow ) isa GlWindow, "first argument to @renderPhase must be a GlWindow; got $glWindow")
+    checkArgument( body.head === :block, "@renderPhase (GlWindow) must be followed by a begin block" )
+        return quote
+            @collectstats RENDER begin
+                renderPhaseBegin( $glWindow )
+                $body
+                renderPhaseEnd( $glWindow )
+            end
+        end
+    end
 
 
 function renderPhaseBegin(glWindow::GlWindow)
-    checkState(!glWindow.isDestroyed)
-    GLFW.MakeContextCurrent(glWindow.handle)
+    checkState( !glWindow.isDestroyed && glWindow != nothing )
+    GLFW.MakeContextCurrent( glWindow.handle )
     checkGlError()
 end
 
 
 function renderPhaseEnd(glWindow::GlWindow)
-    checkState(!glWindow.isDestroyed)
+    checkState( !glWindow.isDestroyed )
     checkGlError()
-    GLFW.SwapBuffers(glWindow.handle)
-end
-
-
-function pollEvents(glWindow::GlWindow)
-    checkState(!glWindow.isDestroyed)
-    GLFW.PollEvents()
-    checkGlError()
+    GLFW.SwapBuffers( glWindow.handle )
 end

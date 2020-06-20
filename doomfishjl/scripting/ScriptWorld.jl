@@ -1,16 +1,24 @@
+include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/GlobalEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/SpriteEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
-include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("LogicHandler.jl")
+
+
+# a big question in my mind is whether it adds anything to treat callbacks as ready to go
+# sans-arguments, i.e. callback() is the complete call, or whether to allow the passing
+# of arguments into callbacks from somewhere else.
+# The way we did it in betamax the final callbacks were at their simplest argless wrappers
+# for calls w/ predetermined arguments.
+# For most situations the former is more or less identical and probably safer.
+# But I'm not sure.
 
 
 struct ScriptWorld <: LogicHandler
 
     clock::FrameClock
 
-    spriteRegistry::spriteRegistry
     eventProcessor::EventProcessor
 
     callbacks::Dict{Event, Function}
@@ -19,11 +27,12 @@ struct ScriptWorld <: LogicHandler
 
     initializing::Bool
     acceptingRegistrations::Bool
-    rebootFlag::Bool
-    ScriptWorld(σ::SpriteRegistry, ϵ::EventProcessor, f::frameClock) = new( f, σ, ϵ, Dict{String, Any}(),
+    shouldReboot::Bool
+    ScriptWorld(ϵ::EventProcessor, f::FrameClock) = new( f, ϵ, Dict{String, Any}(),
                                                        defaultGlobalShaderName, true, false )
 end
 
+include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl")
 
 # I made the decision to keep registerCallback!() in ScriptWorld instead of putting it in the EventProcessor b/c
 # the callbacks really have nothing to do w/ anything but scripts, and how the LogicHandler (in this case ScriptWorld)
@@ -35,40 +44,40 @@ function registerCallback!(σ::ScriptWorld, event::Event, callback::Function)
     # callbacks should be set up during script initialization, initial sprites should be drawn during onBegin
     # (so if state is saved onBegin can just be skipped and the sprite stack can be restored)
     checkArgument( σ.acceptingRegistrations, "cannot register events after world has already begun" )
-    checkArgument( !haskey( σ.callbacks, event ), "event $event already registered in ScriptWorld.callbacks" ) )
+    checkArgument( !haskey( σ.callbacks, event ), "event $event already registered in ScriptWorld.callbacks" )
     σ.callbacks[event] = callback
 end
 
 
-function getCallback(σ::Scriptworld, event::Event)
+function getCallback(σ::ScriptWorld, event::Event)
     checkArgument( haskey(σ.callbacks, event), "event $event not registered in $(σ.callbacks)" )
     return σ.callbacks[event]
 end
 
 
-function invokeCallback(callback::Function, statsType::StatsName)
-    invokeEventCallbackStats = @timed callback()
-    updateStats!( metrics, statsType, invokeEventCallbackStats )
-end
-
-
 function onEvent(σ::ScriptWorld, event::Event)
-    checkArgument( haskey( σ.eventProcessor, event ), "event $event not registered in $(σ.eventProcessor.registeredEvents)" )
+    checkArgument( event in σ.eventProcessor.registeredEvents, "event $event not registered in $(σ.eventProcessor.registeredEvents)" )
     callback = getCallback( σ, event )
     @debug "handling event $event via $callback"
-    invokeCallback( callback, INVOKE_EVENT_CALLBACK )
+    @collectstats INVOKE_EVENT_CALLBACK callback()
 end
 
 
 function onBegin(σ::ScriptWorld)
     @info "onBegin"
-    checkArgument( haskey( σ.eventProcessor, GlobalEvent(BEGIN) ), "GlobalEvent(BEGIN) not registered in $(σ.eventProcessor.registeredEvents)" )
-    callback = σ.eventProcessor.registeredEvents[ GlobalEvent(BEGIN) ]
-    invokeCallback( callback, INVOKE_BEGIN_CALLBACK )
+    checkArgument( GlobalEvent(BEGIN) in  σ.eventProcessor.registeredEvents, "GlobalEvent(BEGIN) not registered in $(σ.eventProcessor.registeredEvents)" )
+    callback = getCallback( σ, GlobalEvent(BEGIN) )
+    @collectstats INVOKE_BEGIN_CALLBACK callback()
 end
 
 
-# we just reduced betamax's 19 lines of script loading code to 7.
+function onReboot(σ::ScriptWorld)
+    @info "Rebooting everything (scheduled)"
+
+end
+
+
+# we just reduced betamax's 19 lines of script loading code to 8.
 # I ♥ Julia
 
 function loadScripts(σ::ScriptWorld, scriptNames::Vector{String})
@@ -125,9 +134,9 @@ end
 
 
 #betamax: FIXME 13am code
-shouldReboot(σ::ScriptWorld) = return σ.rebootFlag
+shouldReboot(σ::ScriptWorld) = return σ.shouldReboot
 
 function reboot!(σ::ScriptWorld)
-    σ.rebootFlag = true
+    σ.shouldReboot = true
     @info "Rebooting everything (scheduled)"
 end

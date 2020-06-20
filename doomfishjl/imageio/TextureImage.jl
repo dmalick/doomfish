@@ -92,7 +92,7 @@ end
 function uploadTextureImageGl( textureImage::TextureImage, boundTarget::Int )
     checkState( !textureImage.unloaded, "TextureImage $(textureImage.filename) already unloaded" )
     checkState( textureImage.channels == 4 || textureImage.channels == 3, "TextureImage $(textureImage.filename) has invalid number of channels ($(textureImage.channels))" )
-    textureUploadStats = @timed glTexImage2D(
+    @collectstats TEXTURE_UPLOADS glTexImage2D(
                  boundTarget,
                  textureImage.channels == 4 ? GL_RGBA8 : GL_RGB8, # total guess that this is right. it may shit the bed
                  textureImage.width,
@@ -102,7 +102,6 @@ function uploadTextureImageGl( textureImage::TextureImage, boundTarget::Int )
                  GL_UNSIGNED_BYTE,
                  textureImage.bytePixelData.data
                  )
-    updateStats!( metrics, TEXTURE_UPLOADS, textureUploadStats )
 end
 
 getByteCount(textureImage::TextureImage) = sizeof(textureImage.bytePixelData.data)

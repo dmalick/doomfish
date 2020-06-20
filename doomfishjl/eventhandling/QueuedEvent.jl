@@ -1,4 +1,3 @@
-using DataStructures
 import Base.isless
 include("eventtypes/Event.jl")
 
@@ -9,6 +8,7 @@ include("eventtypes/Event.jl")
 # We can't use this b/c the same event may be queued up multiple times. Instead, we
 # use QueuedEvent as a wrapper and define an isless() method for it based on priority,
 # and just sort!() the event queue as needed.
+# WARNING could be a performance problem, we'll see
 
 
 struct QueuedEvent
@@ -17,7 +17,7 @@ struct QueuedEvent
 
     # FIXME could find a way to do this better. Should be few enough event types
     # that performance for a non-prioritized event shouldn't be too affected.
-    # (However, "should" is a risky word)
+    # ("should" is always risky)
     function QueuedEvent(event::Event)
         priority = nothing
         for key in keys( EVENT_PRIORITIES )
@@ -34,8 +34,7 @@ end
 isless(event_A::QueuedEvent, event_B::QueuedEvent) = return event_A.priority < event_B.priority
 
 
-function priorityOverride!(eventQueue::Vector{QueuedEvent}, event::QueuedEvent, priority::Int)
-    checkArgument( event in eventQueue, "no such event $event in event queue $eventQueue" )
+function priorityOverride!(event::QueuedEvent, priority::Int)
     @warn "event $event priority overridden to $priority"
     event.priority = priority
 end

@@ -3,7 +3,7 @@
 mutable struct Counters
     ramImageBytesCounter::Int
     ramTexturesCounter::Int
-    
+
     ramMeshBytesCounter::Int
     ramMeshesCounter::Int
 

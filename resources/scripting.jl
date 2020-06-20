@@ -29,6 +29,6 @@ setGlobalShader(shaderName::String) = setGlobalShader!( globalScriptWorld, shade
 
 # Dom: FIXME 13am code
 function reboot()
-    globalScriptWorld.rebootFlag = true
+    globalScriptWorld.shouldReboot = true
     @info "Rebooting everything (scheduled)"
 end

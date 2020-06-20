@@ -4,7 +4,7 @@ include("QueuedEvent.jl")
 
 
 # This structure has been simplified significantly. What the EventProcessor now
-# does is map inputs to events and events to callbacks, and tells the LogicHandler what
+# does is map inputs to events, and tells the LogicHandler what
 # events to invoke based on the gamestate, and the order in which to invoke them.
 # We no longer reference specific subtypes of Events or Inputs anywhere, nor do we mess
 # w/ callbacks. We'll let the LogicHandler (whatever it may be) deal w/ all that.
@@ -20,7 +20,7 @@ struct EventProcessor
     registeredEvents::Vector{ Event }
     enqueuedEvents::Vector{ QueuedEvent }
 
-    # WARNING before I shrunk this significantly, we kept track of the last dispatched moment w/ a variable here.
+    # WARNING before I shrunk this, we kept track of the last dispatched moment w/ a variable here.
     # may need to keep track of it somewhere else (like the LogicHandler).
 
     acceptingRegistrations::Bool # = false
@@ -43,7 +43,7 @@ end
 
 function registerEvent!(ϵ::EventProcessor, event::Event; input::Union{Input, Nothing} = nothing)
     checkArgument( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
-    checkArgument( !( event in ϵ.registeredEvents ), "event $event already registered in EventProcessor.registeredEvents" ) )
+    checkArgument( !( event in ϵ.registeredEvents ), "event $event already registered in EventProcessor.registeredEvents" )
     push!( ϵ.registeredEvents, event )
     if nothing != input
         ϵ.inputMap[input] = event
@@ -53,7 +53,7 @@ end
 
 function enqueueEvent!(ϵ::EventProcessor, event::Event)
     checkArgument( event in keys( ϵ.registeredEvents ) , "event $event not registered in EventProcessor.registeredEvents" )
-    push!( ϵ.enqueuedEvents )
+    push!( ϵ.enqueuedEvents, QueuedEvent(event) )
 end
 
 
@@ -71,6 +71,5 @@ end
 
 
 function dispatchSingleEvent(ϵ::EventProcessor, logicHandler::L, event::Event) where L <: LogicHandler
-    handleSingleEventStats = @timed onEvent( logicHandler, event )
-    updateStats!( metrics, HANDLE_SINGLE_EVENT, handleSingleEventStats )
+    @collectstats HANDLE_SINGLE_EVENT onEvent( logicHandler, event )
 end

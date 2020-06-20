@@ -1,4 +1,3 @@
-include("/home/gil/doomfish/doomfishjl/eventhandling/ScriptWorld.jl")
 
 
 # FIXME(?): the whole "ScriptServicer" abstraction was meant as an intermediary between java and python.

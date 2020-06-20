@@ -1,5 +1,5 @@
 
-include("/home/gil/doomfish/pseudointerface/interface.jl")
+include("/home/gil/doomfish/pseudointerface/interface/Interface.jl")
 include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
 include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplate.jl")

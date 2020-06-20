@@ -7,3 +7,14 @@ the sprite package to better fit our needs. In Java the OOP way is the only way 
 success doing the above packages more functionally. They translate very easily. The sprite,
 scripting, and engine packages on the other hand are a bit trickier to translate. I'm prepared
 to try though, if only to reduce dependence on singleton objects.
+
+
+
+6 - 9 - 20
+
+Julia's fast matrix math can be used to check collision w/ high precision. One object's
+mesh matrix offset by its position vector can be subtracted from another object's mesh
+matrix also offset by its position vector and the difference will reveal overlap.
+
+What would be doubly good would be to see if OpenCl can be used to improve performance
+of this.

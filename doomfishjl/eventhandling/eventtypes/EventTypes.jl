@@ -11,6 +11,8 @@ import Base.show
 
     MOUSE_CLICK
     MOUSE_RELEASE
+
+    REBOOT
 end
 
 

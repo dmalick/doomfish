@@ -9,16 +9,18 @@ include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
 
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
 
+include("/home/gil/doomfish/doomfishjl/scripting/ScriptWorld.jl")
 include( resourcePathBase * "scripting.jl")
 
 include("GlProgramBase.jl")
 include("GameLoopFrameClock.jl")
-include("TextureLoadAdvisorImpl.jl")
+include("DefaultTextureLoadAdvisor.jl")
 
 
 struct DoomfishGlProgram <: GlProgramBase
     mainWindow::GlWindow
     frameClock::GameLoopFrameClock
+    eventProcessor::EventProcessor
     # soundWorld::SoundWorld
     # soundRegistry::SoundRegistry
     textureRegistry::TextureRegistry
@@ -88,6 +90,8 @@ function newWorld(program::DoomfishGlProgram; resetSprites::Bool)
         if !resetSprites
             @warn "F5 to resume is even more dangerous than Ctrl+F5, the crashed frame will not be repeated"
                  +"but its effects prior to the crash will still have taken place. It's your funeral buddy."
+        end
+    end
     if program.crashed
         # TODO: sound
         # globalUnpause(soundWorld)
@@ -102,20 +106,25 @@ function newWorld(program::DoomfishGlProgram; resetSprites::Bool)
     if resetSprites
         @info "Resetting sprites"
         setAdvisor!( program.textureRegistry, nothing )
+
         if nothing != program.spriteRegistry
             close( program.spriteRegistry )
         end
+
         @info "Creating sprite registry"
         program.spriteRegistry = SpriteRegistry( program.spriteTemplateRegistry, program.frameClock )
-        @info "Setting texture load advisor"
-        textureLoadAdvisor = TextureLoadAdvisorImpl( program.spriteRegistry, program.textureRegistry )
+
+        @info "Setting default texture load advisor"
+        textureLoadAdvisor = DefaultTextureLoadAdvisor( program.spriteRegistry, program.textureRegistry )
         program.textureRegistry.textureLoadAdvisor = textureLoadAdvisor
     end
+
     @debug "Creating script world"
     eventProcessor = EventProcessor( program.spriteRegistry, program.frameClock )
-    globalScriptWorld = ScriptWorld( eventProcessor, globalScriptServicer )
-    program.scriptWorld =
+    globalScriptWorld = ScriptWorld( program.spriteRegistry, eventProcessor, program.frameClock )
+    program.scriptWorld = globalScriptWorld
     scriptNames = mainScript.split(",")
+
     try
         @info "Loading scripts $scriptNames"
         loadScripts(scriptNames)
@@ -133,29 +142,44 @@ function newWorld(program::DoomfishGlProgram; resetSprites::Bool)
 end
 
 
+
+function KeyInputEvent(p::DoomfishGlProgram, action::GLFW.Action, key::GLFW.Key, mods::Int)
+    keyInput!( p.eventProcessor, action::GLFW.Action, key::GLFW.Key, mods::Int )
+end
+
+function MouseInputEvent(p::DoomfishGlProgram, window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
+    mouseInput!( p.eventProcessor, window, action, button, mods )
+end
+
+function processInputs(p::DoomfishGlProgram)
+    processInputs!( p.eventProcessor )
+end
+
+
+
 function updateView(p::DoomfishGlProgram)
     sprites = getSpritesInRenderOrder( p.spriteRegistry )
     # resyncIfNeeded( p.soundSyncer, sprites ) TODO: sound
 
-    readyStats = @timed checkAllSpritesReadyToRender( p.textureRegistry, 10 * textureLoadGracePeriodFramePercent / p.frameClock.targetFps )
-    ready = updateStats!( metrics, CHECK_ALL_SPRITES_READY_TO_RENDER, readyStats )
+    ready = @collectstats CHECK_ALL_SPRITES_READY_TO_RENDER checkAllSpritesReadyToRender(
+        p.textureRegistry, 10 * textureLoadGracePeriodFramePercent / p.frameClock.targetFps )
 
     # we do this after waiting for sprites to (likely) be in RAM but before rendering because rendering
     # will evict MemoryStrategy.STREAMING sprite frames, and we need that frame to do mouse click collisions
-    pollEventsStats = @timed pollEvents(p)
-    updateStats!( metrics, POLL_EVENTS, pollEventsStats )
+    pollEventsStats = @collectstats POLL_EVENTS pollEvents(p)
+
     if ready
         exitLoadingMode(p)
         clearScreen(p)
-        ramUnloadStats = @timed processRamUnloadQueue( p.textureRegistry )
-        updateStats!( metrics, PROCESS_RAM_UNLOAD_QUEUE, ramUnloadStats )
-        if !p.frameClock.paused
-            renderSpritesStats = @timed renderAllSprites(p)
-            updateStats!( metrics, RENDER_ALL_SPRITES, renderSpritesStats )
-        end
+
+        @collectstats PROCESS_RAM_UNLOAD_QUEUE processRamUnloadQueue( p.textureRegistry )
+
+        if (!p.frameClock.paused) @collectstats RENDER_ALL_SPRITES renderAllSprites(p) end
+
     else
         enterLoadingMode(p)
     end
+
     showPauseScreen( p.frameClock.paused )
     # betamax:
     # updateDevConsole();
@@ -171,8 +195,6 @@ end
 
 
 
-
-
 function updateFps(p::DoomfishGlProgram, newFps::Int)
     if newFps <= 0 return end
     p.frameClock.targetFps = newFps
@@ -182,11 +204,30 @@ end
 function updateLogic(p::DoomfishGlProgram)
     try
         # XXX the dispatchEvents() call below alone makes me think the whole ScriptWorld / EventProcessor thing is way off.
-        if !p.frameClock.paused dispatchEvents!( p.scriptWorld.eventProcessor, p.scriptWorld ) end
+        if !p.frameClock.paused dispatchEvents!( p.eventProcessor, p.scriptWorld ) end
     catch e
         handleCrash(e)
     end
 end
+
+
+
+function pause(p::DoomfishGlProgram)
+    checkState( p.frameClock.paused || !(p.crashed) || !(p.loading) )
+    if (p.crashed)
+        @error "Can't unpause during a crash. Use F5 or CTRL-F5 to resume."
+    elseif (p.loading)
+        @warn "Can't unpause while loading."
+    else
+        p.frameClock.paused = !(p.frameClock.paused)
+        if p.frameClock.paused
+            # globalPause(p.soundWorld) TODO: sound
+        else
+            # globalUnpause(p.soundWorld) TODO: sound
+            # needResync(p.soundSyncer) TODO: sound
+        end
+end
+
 
 
 function getActionStateString(p::DoomfishGlProgram)
@@ -205,6 +246,6 @@ end
 
 
 function close(p::DoomfishGlProgram)
-    close(p.spriteRegistry)
-    close(p.spriteTemplateRegistry)
+    close( p.spriteRegistry )
+    close( p.spriteTemplateRegistry )
 end

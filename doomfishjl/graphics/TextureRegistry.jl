@@ -74,7 +74,6 @@ function setAdvisor!(textureRegistry::TextureRegistry, advisor::TextureLoadAdvis
 end
 
 
-
 # WARNING: I'm just guessing here
 function startLoadingThread(textureRegistry::TextureRegistry)
     @debug "started loading thread"
@@ -101,16 +100,20 @@ function getNeededTextures!(textureRegistry::TextureRegistry)::Vector{TextureNam
     unlock( textureRegistry.LOCK_advisor )
     return textures
 end
+
+
 # WARNING: the below function is a helper for getNeededTextures, and should never be called in other code.
 # this is one of those times java might be helpful
 function neededTextures!(textureRegistry::TextureRegistry) ::Vector{TextureName}
     texturePreloadAdvisingStats = @timed begin
-        if nothing == textureRegistry.advisor return Vector{TextureName}() end
+        if nothing == textureRegistry.advisor return Vector{TextureName}()
+    end
         # TODO: we'll have to pay careful attention to overloading getMostNeededTextures
         mostNeededTextures = [ textureName for textureName in getMostNeededTextures( advisor, texturePreloadFrameLookahead )
                                if !isCurrentlyLoaded( textureRegistry, textureName ) ]
     end
     push!( textureRegistry.texturePreloadAdvisingStats, texturePreloadAdvisingStats )
+
     return length( mostNeededTextures ) > texturePreloadFrameLookahead ?
            mostNeededTextures[ 1:texturePreloadFrameLookahead ] : mostNeededTextures
 end

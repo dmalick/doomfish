@@ -75,12 +75,10 @@ end
 # never end up JIT loading just for a damn collision check
 function isTransparentAtCoordinate(texture::Texture, coordinate::TextureCoordinate)
     if !getLoaded( texture.lazyTextureImage )
-        jitMouseTextureLoadStats = @timed begin
+        @collectstats JIT_MOUSE_TEXTURE_LOADING begin
             @warn "Had to load texture just to process collision check: $texture"
             setLoaded( texture.lazyTextureImage, true )
-
         end
-        updateStats!( metrics, JIT_MOUSE_TEXTURE_LOADING, jitMouseTextureLoadStats )
     end
     color = getPixel( texture.lazyTextureImage, coordinate )
     transparentEnough = isTransparentEnough(color)

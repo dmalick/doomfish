@@ -10,19 +10,20 @@ CACHE_KEY = "TextureImages#textureImageFromFile;lz4"
 
 function loadCached(filename::String)
     fileStream = readCached( CACHE_KEY, filename )
+
     if nothing != fileStream
         @info "Loading from cache: $filename"
-        cachedImageWithLoadTimeStats = @timed loadFromStream( filename, fileStream )
-        updateStats!( metrics, CACHED_IMAGE_LOADING, cachedImageWithLoadTimeStats... )
-        return cachedImageWithLoadTimeStats[1]
+
+        cachedImage = @collectstats CACHED_IMAGE_LOADING loadFromStream( filename, fileStream )
+        return cachedImage
     else
         return nothing
     end
 end
 
 # WARNING: the original betamax code does not allow multiple channel values for sprites,
-# rather, all sprites were required to have 4 channels. We want to allow for an
-# arbitrary number of channels, and have retooled for this.
+# rather, all sprites were required to have 4 channels. We want to allow for
+# both 3 and 4 channel images, and have retooled for this.
 # HOWEVER, I'm not entirely certain I hit everything. There could be fixed-channel
 # code still out there, and it could lead to some nasty bugs.
 

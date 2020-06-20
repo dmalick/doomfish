@@ -18,7 +18,6 @@ struct SpriteSnapshot
     hidden::Bool
     pausedFrame::Int
     location::TextureCoordinate
-
 end
 
 
@@ -46,7 +45,8 @@ end
 
 
 function getMappedFile(name::String)
-    return open( snapshotDir::String*name*".json", create=true, read=true, write=true ) # maybe change this file extension
+    # TODO: maybe change this file extension
+    return open( snapshotDir::String*name*".json", create=true, read=true, write=true )
 end
 
 

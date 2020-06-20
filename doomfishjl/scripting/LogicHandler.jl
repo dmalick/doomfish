@@ -1,5 +1,5 @@
 
-include("/home/gil/doomfish/pseudointerface/interface.jl")
+include("/home/gil/doomfish/pseudointerface/interface/Interface.jl")
 
 
 @interface LogicHandler begin

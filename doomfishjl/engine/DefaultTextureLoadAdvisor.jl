@@ -4,13 +4,13 @@ include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 include("/home/gil/doomfish/doomfishjl/assetnames.jl")
 
 
-struct TextureLoadAdvisorImpl <: TextureLoadAdvisor
+struct DefaultTextureLoadAdvisor <: TextureLoadAdvisor
     spriteRegistry::SpriteRegistry
     spriteTemplateRegistry::SpriteTemplateRegistry
 end
 
 
-function getMostNeededTextures(advisor::TextureLoadAdvisorImpl, frameLookahead::Int)
+function getMostNeededTextures(advisor::DefaultTextureLoadAdvisor, frameLookahead::Int)
     needed = Vector{TextureName}()
     neededSet = Set{TextureName}()
     for framesAhead in 1:frameLookahead
