@@ -63,27 +63,27 @@ function initialize()
     # enable transparency
     glEnable( GL_BLEND )
     glEnable( GL_DEPTH_TEST )
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
 end
 
 
 # betamax has showInitialLoadingScreen() defined here. I moved it to GlProgramBase.
 
 
-function expensiveInitialize(program::DoomfishGlProgram)
+function expensiveInitialize( program::DoomfishGlProgram )
     preloadTemplates( program.spriteTemplateRegistry )
     newWorld( program, resetSprites = true )
 end
 
 
-function prepareBuiltinTextures(program::DoomfishGlProgram)
+function prepareBuiltinTextures( program::DoomfishGlProgram )
     program.pausedTexture = simpleTexture( pausedTextureFile )
     program.crashTexture = simpleTexture( crashTextureFile )
     program.loadingTexture = simpleTexture( loadingTextureFile )
 end
 
 
-function newWorld(program::DoomfishGlProgram; resetSprites::Bool)
+function newWorld( program::DoomfishGlProgram; resetSprites::Bool )
     @info "Starting new world"
     if program.crashed
         @warn "Restarting world after a crash. Unpredictable behavior could occur! (but maybe worth a shot...)"
@@ -143,21 +143,21 @@ end
 
 
 
-function KeyInputEvent(p::DoomfishGlProgram, action::GLFW.Action, key::GLFW.Key, mods::Int)
+function KeyInputEvent( p::DoomfishGlProgram, action::GLFW.Action, key::GLFW.Key, mods::Int )
     keyInput!( p.eventProcessor, action::GLFW.Action, key::GLFW.Key, mods::Int )
 end
 
-function MouseInputEvent(p::DoomfishGlProgram, window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
+function MouseInputEvent( p::DoomfishGlProgram, window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
     mouseInput!( p.eventProcessor, window, action, button, mods )
 end
 
-function processInputs(p::DoomfishGlProgram)
+function processInputs( p::DoomfishGlProgram )
     processInputs!( p.eventProcessor )
 end
 
 
 
-function updateView(p::DoomfishGlProgram)
+function updateView( p::DoomfishGlProgram )
     sprites = getSpritesInRenderOrder( p.spriteRegistry )
     # resyncIfNeeded( p.soundSyncer, sprites ) TODO: sound
 
@@ -195,13 +195,13 @@ end
 
 
 
-function updateFps(p::DoomfishGlProgram, newFps::Int)
+function updateFps( p::DoomfishGlProgram, newFps::Int )
     if newFps <= 0 return end
     p.frameClock.targetFps = newFps
 end
 
 
-function updateLogic(p::DoomfishGlProgram)
+function updateLogic( p::DoomfishGlProgram )
     try
         # XXX the dispatchEvents() call below alone makes me think the whole ScriptWorld / EventProcessor thing is way off.
         if !p.frameClock.paused dispatchEvents!( p.eventProcessor, p.scriptWorld ) end
@@ -212,7 +212,7 @@ end
 
 
 
-function pause(p::DoomfishGlProgram)
+function pause( p::DoomfishGlProgram )
     checkState( p.frameClock.paused || !(p.crashed) || !(p.loading) )
     if (p.crashed)
         @error "Can't unpause during a crash. Use F5 or CTRL-F5 to resume."
@@ -230,14 +230,14 @@ end
 
 
 
-function getActionStateString(p::DoomfishGlProgram)
+function getActionStateString( p::DoomfishGlProgram )
     return crashed ? "CRASH" :
                     (loading ? "LOADING" :
                             (p.frameClock.paused ? "PAUSE" : "PLAY"))
 end
 
 
-function handleCrash(p:DoomfishGlProgram, e::Exception)
+function handleCrash( p:DoomfishGlProgram, e::Exception )
     @error "Crashed! This is usually due to a script bug, in which case you can try resuming."
     p.frameClock.paused = true
     # globalPause(p.soundWorld) TODO: sound
@@ -245,7 +245,7 @@ function handleCrash(p:DoomfishGlProgram, e::Exception)
 end
 
 
-function close(p::DoomfishGlProgram)
+function close( p::DoomfishGlProgram )
     close( p.spriteRegistry )
     close( p.spriteTemplateRegistry )
 end

@@ -2,8 +2,8 @@ include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/GlobalEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/SpriteEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/LogicHandler.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
-include("LogicHandler.jl")
 
 
 # a big question in my mind is whether it adds anything to treat callbacks as ready to go
@@ -16,8 +16,6 @@ include("LogicHandler.jl")
 
 
 struct ScriptWorld <: LogicHandler
-
-    clock::FrameClock
 
     eventProcessor::EventProcessor
 

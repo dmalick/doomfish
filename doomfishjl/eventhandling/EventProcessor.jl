@@ -1,6 +1,6 @@
-include("/home/gil/doomfish/doomfishjl/scripting/LogicHandler.jl")
-include("inputtypes/Input.jl")
-include("QueuedEvent.jl")
+include("event/QueuedEvent.jl")
+include("input/Input.jl")
+include("logic/LogicHandler.jl")
 
 
 # This structure has been simplified significantly. What the EventProcessor now
@@ -10,7 +10,6 @@ include("QueuedEvent.jl")
 # w/ callbacks. We'll let the LogicHandler (whatever it may be) deal w/ all that.
 # Events and Inputs being abstract types, and the LogicHandler being an interface,
 # any number of varying structures can be built around this single EventProcessor.
-
 
 struct EventProcessor
 
@@ -28,22 +27,26 @@ struct EventProcessor
     EventProcessor() = new( Dict{Input, Event}(), Vector{Input}(), Dict{Event, Function}(), Vector{QueuedEvent}(), false )
 end
 
+hasevent( ϵ::EventProcessor, event::Event ) = return event in ϵ.registeredEvents
+
 
 # we use the popfirst! / push! style queue to be consistent w/ the event queue
-enqueueInput!(ϵ::EventProcessor, input::Input) = haskey( ϵ.inputMap ) ? push!( ϵ.inputQueue, input ) : return
+enqueueInput!( ϵ::EventProcessor, input::Input ) = haskey( ϵ.inputMap ) ? push!( ϵ.inputQueue, input ) : return
 
 
-function processInputs!(ϵ::EventProcessor)
+function processInputs!( ϵ::EventProcessor )
+    # we use the popfirst! / push! style queue to be consistent w/ the event queue
     while !(ϵ.inputQueue |> isempty)
-        # we use the popfirst! / push! style queue to be consistent w/ the event queue
         enqueueEvent!( ϵ, ϵ.inputMap[ popfirst!(p.inputQueue) ] )
     end
 end
 
 
-function registerEvent!(ϵ::EventProcessor, event::Event; input::Union{Input, Nothing} = nothing)
+function registerEvent!( ϵ::EventProcessor, event::Event; input::Union{Input, Nothing} = nothing )
+
     checkArgument( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
-    checkArgument( !( event in ϵ.registeredEvents ), "event $event already registered in EventProcessor.registeredEvents" )
+    checkArgument( !hasevent( ϵ, event ), "event $event already registered in EventProcessor.registeredEvents" )
+
     push!( ϵ.registeredEvents, event )
     if nothing != input
         ϵ.inputMap[input] = event
@@ -51,17 +54,17 @@ function registerEvent!(ϵ::EventProcessor, event::Event; input::Union{Input, No
 end
 
 
-function enqueueEvent!(ϵ::EventProcessor, event::Event)
-    checkArgument( event in keys( ϵ.registeredEvents ) , "event $event not registered in EventProcessor.registeredEvents" )
+function enqueueEvent!( ϵ::EventProcessor, event::Event )
+    checkArgument( hasevent( ϵ, event ) , "event $event not registered in EventProcessor.registeredEvents.\n(Registered events: $(ϵ.registeredEvents))" )
     push!( ϵ.enqueuedEvents, QueuedEvent(event) )
 end
 
 
-function dispatchEvents!(ϵ::EventProcessor, logicHandler::L) where L <: LogicHandler
+function dispatchEvents!( ϵ::EventProcessor, logicHandler::LogicHandler )
+    # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
+    # so that when we sort it by priority we don't have to reverse the sort order
     sort!( ϵ.enqueuedEvents )
     while !(ϵ.enqueuedEvents |> isEmpty)
-        # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
-        # so that when we sort it by priority we don't have to reverse the sort order
         dispatchedEvent = popfirst!(ϵ.enqueuedEvents).event
         dispatchSingleEvent( ϵ, logicHandler, dispatchedEvent )
         # TODO: a separate propagate() call used to be here. seemed like too much of an
@@ -70,6 +73,7 @@ function dispatchEvents!(ϵ::EventProcessor, logicHandler::L) where L <: LogicHa
 end
 
 
-function dispatchSingleEvent(ϵ::EventProcessor, logicHandler::L, event::Event) where L <: LogicHandler
+function dispatchSingleEvent( ϵ::EventProcessor, logicHandler::LogicHandler, event::Event )
+    checkArgument( hasevent( ϵ, event ), "event $event not registered in EventProcessor.\n(Registered events: $(ϵ.registeredEvents))" )
     @collectstats HANDLE_SINGLE_EVENT onEvent( logicHandler, event )
 end

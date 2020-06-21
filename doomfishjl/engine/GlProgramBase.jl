@@ -1,43 +1,40 @@
 include("/home/gil/doomfish/pseudointerface/interface/Interface.jl")
-include("/home/gil/doomfish/doomfishjl/engine/GameLoopFrameClock.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/inputhandling.jl")
+include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
 include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 @interface GlProgramBase begin
 
-    mainWindow::Union{GlWindow, Nothing}
-    frameClock::GameLoopFrameClock
-    eventProcessor::EventProcessor
+    mainWindow::Union{ GlWindow, Nothing }
+    frameClock::FrameClock
 
 end
 
-@abstractMethod( GlProgramBase, initialize )
-@abstractMethod( GlProgramBase, keyInputEvent ) # key::Int, action::Int, mods::Int
-@abstractMethod( GlProgramBase, mouseInputEvent )
-@abstractMethod( GlProgramBase, processInputs )
+@abstractMethod GlProgramBase initialize()
+@abstractMethod GlProgramBase keyInputEvent( key::GLFW.Key, action::GLFW.Action, mods::Int )
+@abstractMethod GlProgramBase mouseInputEvent( window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
+@abstractMethod GlProgramBase processInputs()
 # updateView could be called every frame, more than once per frame, less often, etc.
 # betamax: it must be idempotent (not sure you're using that word right Dom)
-@abstractMethod( GlProgramBase, updateView )
+@abstractMethod GlProgramBase updateView()
 # updateLogic will be called exactly once per logical frame, ie, once for frame 0, then once for frame 1, etc
-@abstractMethod( GlProgramBase, updateLogic )
+@abstractMethod GlProgramBase updateLogic()
 # @abstractMethod( GlProgramBase, getWindowTitle )
 # @abstractMethod( GlProgramBase, getWindowHeight )
 # @abstractMethod( GlProgramBase, getWindowWidth )
-@abstractMethod( GlProgramBase, getDebugMode ) # TODO: get from command line property
-@abstractMethod( GlProgramBase, expensiveInitialize )
-@abstractMethod( GlProgramBase, close )
+@abstractMethod GlProgramBase getDebugMode() # TODO: get from command line property
+@abstractMethod GlProgramBase expensiveInitialize()
+@abstractMethod GlProgramBase close()
 
 
-function runGlProgram(p::GlProgramBase)
+function runGlProgram( p::GlProgramBase )
     initGlfw( getDebugMode(p) )
     # FIXME(?) kinda don't like having to define the key/mouse callbacks at runtime,
     # but all they do is call single other functions, which were defined at parse time,
     # so my guess is it's ok.
     # we'll see.
-    mouseButtonCallback(window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int) =  mouseInputEvent( p, window, action, button, mods)
+    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int ) =  mouseInputEvent( p, window, action, button, mods)
     keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int, action::GLFW.Action, mods::Int ) = keyInputEvent( p, action, key, mods )
     try
         mainWindow = GlWindow( getWindowWidth(p), getWindowHeight(p), getWindowTitle(p),
@@ -55,7 +52,7 @@ function runGlProgram(p::GlProgramBase)
                 @checkGlError expensiveInitialize(p)
                 @debug "User initialization done"
             end
-            resetLogicFrames( p.frameClock )
+            resetLogicFrames!( p.frameClock )
             try
                 while !shouldClose( p.mainWindow )
                     loopOnce(p)
@@ -75,25 +72,25 @@ function runGlProgram(p::GlProgramBase)
 end
 
 
-function showInitialLoadingScreen(loadingTexture::Texture, shader::ShaderProgram)
+function showInitialLoadingScreen( loadingTexture::Texture, shader::ShaderProgram )
     render( loadingTexture, TextureCoordinate(0.5,0.5), shader )
 end
 
 
 # TODO: get from command line property
-getDebugMode(p::GlProgramBase) = return debugMode
+getDebugMode( p::GlProgramBase ) = return debugMode
 
 
-reportMetrics() = return Dict{StatsName, Dict{StatsFieldName,String}}( stats.name => StatsAnalysis(stats)
+reportMetrics() = return Dict{ StatsName, Dict{StatsFieldName, String} }( stats.name => StatsAnalysis(stats)
                                                                                  for stats in values( metrics.statContainers ))
 
-closeWindow(p::GlProgramBase) = setShouldClose( p.mainWindow, true )
+closeWindow( p::GlProgramBase ) = setShouldClose( p.mainWindow, true )
 
 
-pollEvents(p::GlProgramBase) = pollEvents( p.mainWindow )
+pollEvents( p::GlProgramBase ) = pollEvents( p.mainWindow )
 
 
-function loopOnce(p::GlProgramBase)
+function loopOnce( p::GlProgramBase )
     # XXX not sure whether to do inputs before or after processing the frame
     @collectstats INPUT_TIME processInputs(p)
 

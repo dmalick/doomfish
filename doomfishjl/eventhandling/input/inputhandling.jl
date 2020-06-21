@@ -1,8 +1,8 @@
 using GLFW
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl") # includes coordinates.jl
-include("inputtypes/KeyInput.jl")
-include("inputtypes/MouseInput.jl")
+include("KeyInput.jl")
+include("MouseInput.jl")
 
 
 # these pass along input data to the EventProcessor.

@@ -60,7 +60,8 @@ function drawData(vertices)
 
      attachShader(shaderProgram, vertexShader)
      attachShader(shaderProgram, fragmentShader)
-     linkAndUse!(shaderProgram)
+     linkProgram!(shaderProgram)
+     useProgram(shaderProgram)
 
      positionAttributeLocation = getAttribLocation("position", shaderProgram)
      vertexAttribPointer(positionAttributeLocation, 2, Float32, false, 5, 0)
