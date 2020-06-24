@@ -12,6 +12,8 @@ crashTextureFile = ""
 
 metrics = Metrics()
 
+program = nothing
+
 # constants
 
 const textureCacheKey = "TextureImages#textureImageFromFile;lz4"

@@ -1,7 +1,11 @@
 include("event/QueuedEvent.jl")
+include("event/GlobalEvent.jl")
 include("input/Input.jl")
 include("logic/LogicHandler.jl")
 
+
+# these event types occur only at predefined times, and cannot be queued.
+EXCLUDED_EVENTS = [ GlobalEvent( BEGIN ), GlobalEvent( LOGIC_FRAME_END ) ]
 
 # This structure has been simplified significantly. What the EventProcessor now
 # does is map inputs to events, and tells the LogicHandler what
@@ -11,7 +15,7 @@ include("logic/LogicHandler.jl")
 # Events and Inputs being abstract types, and the LogicHandler being an interface,
 # any number of varying structures can be built around this single EventProcessor.
 
-struct EventProcessor
+mutable struct EventProcessor
 
     inputMap::Dict{ Input, Event }
     inputQueue::Vector{ Input }
@@ -24,7 +28,7 @@ struct EventProcessor
 
     acceptingRegistrations::Bool # = false
 
-    EventProcessor() = new( Dict{Input, Event}(), Vector{Input}(), Dict{Event, Function}(), Vector{QueuedEvent}(), false )
+    EventProcessor() = new( Dict{Input, Event}(), Vector{Input}(), Vector{Event}(), Vector{QueuedEvent}(), false )
 end
 
 hasevent( ϵ::EventProcessor, event::Event ) = return event in ϵ.registeredEvents
@@ -55,6 +59,7 @@ end
 
 
 function enqueueEvent!( ϵ::EventProcessor, event::Event )
+    checkArgument( !( event in EXCLUDED_EVENTS ), "$event cannot be queued. It gets called automatically at a predefined time." )
     checkArgument( hasevent( ϵ, event ) , "event $event not registered in EventProcessor.registeredEvents.\n(Registered events: $(ϵ.registeredEvents))" )
     push!( ϵ.enqueuedEvents, QueuedEvent(event) )
 end
@@ -64,16 +69,28 @@ function dispatchEvents!( ϵ::EventProcessor, logicHandler::LogicHandler )
     # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
     # so that when we sort it by priority we don't have to reverse the sort order
     sort!( ϵ.enqueuedEvents )
-    while !(ϵ.enqueuedEvents |> isEmpty)
+    while !(ϵ.enqueuedEvents |> isempty)
         dispatchedEvent = popfirst!(ϵ.enqueuedEvents).event
         dispatchSingleEvent( ϵ, logicHandler, dispatchedEvent )
-        # TODO: a separate propagate() call used to be here. seemed like too much of an
-        # implementation-specific thing, so move it to the LogicHandler.
     end
+    # the LOGIC_FRAME_END event is dispatched after all other events in a single logic frame,
+    # intended as a propagation/cleanup step. We keep it separate b/c
+    # I debated making this a requirement at all, but
+    # if the LogicHandler implementation has no use for it, it can just implement an empty call.
+    dispatchLogicFrameEnd( logicHandler )
 end
 
 
 function dispatchSingleEvent( ϵ::EventProcessor, logicHandler::LogicHandler, event::Event )
     checkArgument( hasevent( ϵ, event ), "event $event not registered in EventProcessor.\n(Registered events: $(ϵ.registeredEvents))" )
-    @collectstats HANDLE_SINGLE_EVENT onEvent( logicHandler, event )
+    @info "$(event.eventType)"
+    #@collectstats HANDLE_SINGLE_EVENT
+    onEvent( logicHandler, event )
+end
+
+
+function dispatchLogicFrameEnd( logicHandler::LogicHandler )
+    # @collectstats HANDLE_SINGLE_EVENT
+    @info "LOGIC_FRAME_END"
+    onLogicFrameEnd( logicHandler )
 end

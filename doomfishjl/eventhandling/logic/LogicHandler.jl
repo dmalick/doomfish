@@ -9,5 +9,7 @@ include("/home/gil/doomfish/doomfishjl/eventhandling/event/Event.jl")
 end
 
 
+
 @abstractMethod LogicHandler onEvent( event::Event )
 @abstractMethod LogicHandler onBegin()
+@abstractMethod LogicHandler onLogicFrameEnd()

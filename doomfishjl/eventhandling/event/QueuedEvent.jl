@@ -1,5 +1,5 @@
 import Base.isless
-include("eventtypes/Event.jl")
+include("Event.jl")
 
 
 # we mess w/ the whole QueuedEvent abstraction rather than just doing a priority
@@ -8,7 +8,7 @@ include("eventtypes/Event.jl")
 # We can't use this b/c the same event may be queued up multiple times. Instead, we
 # use QueuedEvent as a wrapper and define an isless() method for it based on priority,
 # and just sort!() the event queue as needed.
-# WARNING could be a performance problem, we'll see
+# WARNING could be a performance problem, we'll see.
 
 
 struct QueuedEvent
@@ -31,7 +31,11 @@ struct QueuedEvent
 end
 
 
-isless(event_A::QueuedEvent, event_B::QueuedEvent) = return event_A.priority < event_B.priority
+function isless(event_A::QueuedEvent, event_B::QueuedEvent)
+    if event_A.priority == nothing return true end
+    if event_B.priority == nothing return false end
+    return event_A.priority < event_B.priority
+end
 
 
 function priorityOverride!(event::QueuedEvent, priority::Int)

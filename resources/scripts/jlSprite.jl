@@ -8,6 +8,9 @@ struct JlSprite
     repeatIndefinitely::Bool
 
 
+    moments = Dict{ Union{Int, String}, Vector{Function} }()
+
+
     physics::PhysicsContainer
 
 

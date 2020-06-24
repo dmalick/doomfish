@@ -13,7 +13,7 @@ end
 
 @abstractMethod GlProgramBase initialize()
 @abstractMethod GlProgramBase keyInputEvent( key::GLFW.Key, action::GLFW.Action, mods::Int )
-@abstractMethod GlProgramBase mouseInputEvent( window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
+@abstractMethod GlProgramBase mouseInputEvent( window::GLFW.Window, action::GLFW.Action, button::GLFW.MouseButton, mods::Int )
 @abstractMethod GlProgramBase processInputs()
 # updateView could be called every frame, more than once per frame, less often, etc.
 # betamax: it must be idempotent (not sure you're using that word right Dom)

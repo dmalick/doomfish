@@ -3,7 +3,7 @@ import Base.show
 @enum GlobalEventType begin
     BEGIN
     MOMENT
-    PROPAGATE
+    LOGIC_FRAME_END # formerly PROPAGATE
 
     KEY_PRESSED
     KEY_RELEASED

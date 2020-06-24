@@ -19,6 +19,17 @@ end
 checkArgument(arg, f::Function, errorMessage::String="$f(arg) returned false") = checkArgument( f(arg), errorMessage)
 
 
+function argIs( arg::Symbol, is )
+    return eval( arg ) === is
+end
+
+
+function argIs( arg::Expr, is )
+    return arg.head === is
+end
+
+
+
 methodAsExpr(m::Method) = Meta.parse( match( FUNCTION_DEF_PATTERN, string(m) ).match )
 
 convert(::Type{Expr}, m::Method) = methodAsExpr(m)
