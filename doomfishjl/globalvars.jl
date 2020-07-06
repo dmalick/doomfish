@@ -28,7 +28,7 @@ const assetCacheNamespace = "c3fabaa7-2973-4de2-9511-a7c022f329b6"
 const modelPathBase = "/home/gil/doomfishdata/data/models/"
 const spritePathBase = "/home/gil/doomfishdata/data/sprites/"
 const soundPathBase = "/home/gil/doomfishdata/data/sounds/"
-const shaderPathBase = "/home/gil/doomfishdata/shaders/"
+const shaderPathBase = "/home/gil/doomfish/resources/shaders/"
 const resourcePathBase = "/home/gil/doomfish/resources/"
 
 const textureCacheDir = "/home/gil/doomfishdata/data/texturecache/"

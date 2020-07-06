@@ -1,7 +1,12 @@
-using OrderedCollections
+using OrderedCollections, GLFW
 include("EventTypes.jl")
 
 abstract type Event end
+
+
+Key = Union{ GLFW.Key, Nothing }
+Moment = Union{ Int, Nothing }
+
 
 EVENT_PRIORITIES = OrderedDict{ Int, Vector{EventType} }(
     1 => [ SPRITE_MOMENT, MOMENT ],

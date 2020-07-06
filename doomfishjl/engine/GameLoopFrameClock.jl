@@ -17,6 +17,8 @@ struct GameLoopFrameClock <: FrameClock
     GameLoopFrameClock(nextLogicFrameTime::Int64) = new( nextLogicFrameTime, 0, targetFps, false )
 end
 
+GameLoopFrameClock() = GameLoopFrameClock(1)
+
 
 function setPaused!(clock::GameLoopFrameClock, paused::Bool)
     if clock.paused == paused

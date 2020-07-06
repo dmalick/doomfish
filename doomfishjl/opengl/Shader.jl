@@ -9,15 +9,18 @@ struct Shader
      handle::UInt32
 end
 
-function loadAndCompileShader(filename::String, shaderType::UInt32)
+function loadAndCompileShader( filename::String, shaderType::UInt32 )
+
     shaderSource::String = read( filename, String )
-    shader::UInt32 = glCreateShader( shaderType )
-    glShaderSource( shader, shaderSource )
-    glCompileShader(shader)
+    handle::UInt32 = glCreateShader( shaderType )
 
-    status = glGetShaderiv( shader, GL_COMPILE_STATUS )
-    @info "glShaderiv(shader, GL_COMPILE_STATUS) return val = $status"
-    checkState( status==GL_TRUE, "shader $(filename) failed to compile" )
+    glShaderSource( handle, shaderSource )
+    glCompileShader( handle )
 
-    return Shader(shader)
+    status = glGetShaderiv( handle, GL_COMPILE_STATUS )
+    @info "glShaderiv( shader, GL_COMPILE_STATUS ) return val = $status"
+    checkState( status == GL_TRUE, "shader $(filename) failed to compile" )
+
+    return Shader( handle )
+
 end

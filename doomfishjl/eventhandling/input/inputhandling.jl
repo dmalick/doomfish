@@ -9,14 +9,14 @@ include("MouseInput.jl")
 # they'll get assigned as the key/mousebutton callbacks for the GLFW window.
 
 
-keyInput( eventProcessor::EventProcessor, action::GLFW.Action, key::GLFW.Key, mods::Int ) = enqueueInput!( eventProcessor,
-                                                                                                           KeyInput( action, key, mods ) )
+keyInput( eventProcessor::EventProcessor, action::GLFW.Action, key::GLFW.Key ) = enqueueInput!( eventProcessor,
+                                                                                                KeyInput( action, key ) )
 
-function mouseInput( eventProcessor::EventProcessor, window::Int64, action::GLFW.Action, button::GLFW.MouseButton, mods::Int )
+function mouseInput( eventProcessor::EventProcessor, window::Int64, action::GLFW.Action, button::GLFW.MouseButton )
     @info "queueing mouse input for window $window"
     coord = getCursorPosition( window )
     if (coord |> isValidCoordinate)
-        enqueueInput!( eventProcessor, MouseInput( action, button, coord, mods ) )
+        enqueueInput!( eventProcessor, MouseInput( action, button, coord, zero(Int32) ) )
     else
         # Not sure if the original betamax message (below) is completely accurate
         @warn "Out of bounds $coord due to excessively delayed handling of mouse click"

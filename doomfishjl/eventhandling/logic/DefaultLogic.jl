@@ -11,7 +11,7 @@ mutable struct DefaultLogic <: LogicHandler
     callbacks::Dict{ Event, Function }
     acceptingCallbacks::Bool
 
-    DefaultLogic() = new( Dict{ Event, Function }(), true )
+    DefaultLogic() = new( Dict{ Event, Function }(), false )
 end
 hascallback( λ::DefaultLogic, event::Event ) = haskey( λ.callbacks, event )
 
@@ -29,8 +29,14 @@ function registerCallback!( λ::DefaultLogic, event::Event, callback::Function )
 end
 
 
+function callbackOverride!( λ::DefaultLogic, event::Event, callback::Function )
+    @warn "overriding callback $(getCallback(λ, event)) for event $event"
+    λ.callbacks[event] = event
+end
+
+
 function getCallback( λ::DefaultLogic, event::Event )
-    checkArgument( hascallback( λ, event ), "No callback registered for event $event" )
+    checkState( hascallback( λ, event ), "No callback registered for event $event" )
     return λ.callbacks[event]
 end
 

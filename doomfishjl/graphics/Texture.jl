@@ -126,7 +126,7 @@ function prepareForDrawing()
     vbo = getVBO()
     vao = getVAO()
     bindVAO(vao)
-    bindAndLoadVBO( vbo, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, Vector{Float32}(
+    bindAndLoadVBO( vbo, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, [
     # TODO: implement variable sprite positions
     # for now, left over from the mute days, all sprites are fullscreen w/ position (0,0)
 
@@ -138,7 +138,7 @@ function prepareForDrawing()
 
       1.0f0,  1.0f0,     1.0f0, 1.0f0,
       1.0f0, -1.0f0,     1.0f0, 0.0f0,
-     -1.0f0, -1.0f0,     0.0f0, 0.0f0,)
+     -1.0f0, -1.0f0,     0.0f0, 0.0f0,]
     )
     # the below wraps glVertexAttribPointer to make the argument types less annoying
     # (see VAO.jl)

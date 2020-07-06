@@ -5,12 +5,13 @@ struct MouseInput <: Input
     action::GLFW.Action
     button::GLFW.MouseButton
     coordinate::TextureCoordinate
-    mods::Int
+    mods::Int32
 end
-MouseInput(action::GLFW.Action, button::GLFW.MouseButton, mods::Int) = MouseInput(action, button, TextureCoordinate(0.5, 0.5), mods)
+MouseInput(action::GLFW.Action, button::GLFW.MouseButton, mods::Int32) = MouseInput(action, button, TextureCoordinate(0.5, 0.5), mods)
+MouseInput(action::GLFW.Action, button::GLFW.MouseButton) = MouseInput(action, button, TextureCoordinate(0.5, 0.5), zero(Int32))
 
 
-function mouseInput!( eventProcessor::EventProcessor, window::Int64, input::MouseInput )
+function mouseInput!( eventProcessor::EventProcessor, window::GLFW.Window, input::MouseInput )
     @info "queueing mouse input for window $window"
     coord = getCursorPosition( window )
     if (coord |> isValidCoordinate)

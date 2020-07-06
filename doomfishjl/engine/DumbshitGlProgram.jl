@@ -1,29 +1,31 @@
+include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/input/inputhandling.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+#include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("GlProgramBase.jl")
+include("GameLoopFrameClock.jl")
 
 
-struct DumbshitGlProgram <: GlProgramBase
+mutable struct DumbshitGlProgram <: GlProgramBase
 
-    mainWindow::GlWindow
+    mainWindow::Union{ GlWindow, Nothing }
     frameClock::GameLoopFrameClock
+
     eventProcessor::EventProcessor
-    logicHandler::LogicHandler
+    logicHandler::DefaultLogic
+    #spriteRegistry::SpriteRegistry
 
 end
 
-
+DumbshitGlProgram() = DumbshitGlProgram( nothing, GameLoopFrameClock(), EventProcessor(), DefaultLogic(), #=SpriteRegistry()=# )
 
 
 function initialize()
-    if mainScript == Nothing
-        @error "No main logic script defined (-Dbetamax.mainScript), exiting"
-        throw( ArgumentError("No main logic script defined") )
-    end
 
-    include("allshaders.jl")
+    include("/home/gil/doomfish/doomfishjl/engine/allshaders.jl")
     prepareForDrawing()
-    prepareBuiltinTextures()
+    #prepareBuiltinTextures()
 
     # enable transparency
     glEnable( GL_BLEND )
@@ -32,27 +34,34 @@ function initialize()
 end
 
 
-function expensiveInitialize( program::DoomfishGlProgram )
-    preloadTemplates( program.spriteTemplateRegistry )
+expensiveInitialize( p::DumbshitGlProgram ) = @debug "expensiveInitialize" #preloadTemplates( p.spriteRegistry.spriteTemplateRegistry )
 
+
+function updateView( p::DumbshitGlProgram )
+    #sprites = getSpritesInRenderOrder( p.spriteRegistry )
+    @debug "updateView"
 end
 
 
-
-
-
-
-
-function KeyInputEvent( p::DumbshitGlProgram, action::GLFW.Action, key::GLFW.Key, mods::Int )
-    keyInput!( p.eventProcessor, action::GLFW.Action, key::GLFW.Key, mods::Int )
+function updateLogic( p::DumbshitGlProgram )
+    @debug "updateLogic"
 end
 
-function MouseInputEvent( p::DumbshitGlProgram, window::GLFW.Window, action::GLFW.Action, button::GLFW.Button, mods::Int )
-    mouseInput!( p.eventProcessor, window, action, button, mods )
+
+function keyInputEvent( p::DumbshitGlProgram, action::GLFW.Action, key::GLFW.Key )
+    keyInput( p.eventProcessor, action, key )
+end
+
+function mouseInputEvent( p::DumbshitGlProgram, window::GLFW.Window, action::GLFW.Action, button::GLFW.MouseButton )
+    mouseInput( p.eventProcessor, window, action, button )
 end
 
 function processInputs( p::DumbshitGlProgram )
     processInputs!( p.eventProcessor )
+end
+
+function dispatchEvents( p::DumbshitGlProgram )
+    dispatchEvents!(p.eventProcessor, p.logicHandler)
 end
 
 getDebugMode( p::DumbshitGlProgram ) = return debugMode

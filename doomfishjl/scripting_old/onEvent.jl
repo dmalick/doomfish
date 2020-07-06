@@ -1,6 +1,6 @@
-include("/home/gil/doomfish/doomfishjl/engine/GlProgramBase.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
+
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 
@@ -10,10 +10,9 @@ macro onEvent( event, callback )
 
     # passing a non-Event into the below call will crash, by design.
     # it's easier than manually checking the argument.
-    # could do a try-catch but the error message for
-    # checkEventRegistered is good enough.
+    # could do a try-catch but the error message for checkEventRegistered
+    # is good enough.
     return quote
-        checkState( glProgram isa GlProgramBase, "cannot register event: glProgram not set or initialized" )
         checkEventRegistered( glProgram.EventProcessor, glProgram.LogicHandler, $event )
         registerEvent!( glProgram.EventProcessor, $event )
         registerCallback!( glProgram.LogicHandler, $event, ()-> $callback )

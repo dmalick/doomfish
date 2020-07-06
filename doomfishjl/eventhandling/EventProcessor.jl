@@ -21,7 +21,7 @@ mutable struct EventProcessor
     inputQueue::Vector{ Input }
 
     registeredEvents::Vector{ Event }
-    enqueuedEvents::Vector{ QueuedEvent }
+    queuedEvents::Vector{ QueuedEvent }
 
     # WARNING before I shrunk this, we kept track of the last dispatched moment w/ a variable here.
     # may need to keep track of it somewhere else (like the LogicHandler).
@@ -35,20 +35,20 @@ hasevent( ϵ::EventProcessor, event::Event ) = return event in ϵ.registeredEven
 
 
 # we use the popfirst! / push! style queue to be consistent w/ the event queue
-enqueueInput!( ϵ::EventProcessor, input::Input ) = haskey( ϵ.inputMap ) ? push!( ϵ.inputQueue, input ) : return
+enqueueInput!( ϵ::EventProcessor, input::Input ) = haskey( ϵ.inputMap, input ) ? push!( ϵ.inputQueue, input ) : return
 
 
 function processInputs!( ϵ::EventProcessor )
     # we use the popfirst! / push! style queue to be consistent w/ the event queue
     while !(ϵ.inputQueue |> isempty)
-        enqueueEvent!( ϵ, ϵ.inputMap[ popfirst!(p.inputQueue) ] )
+        enqueueEvent!( ϵ, ϵ.inputMap[ popfirst!(ϵ.inputQueue) ] )
     end
 end
 
 
 function registerEvent!( ϵ::EventProcessor, event::Event; input::Union{Input, Nothing} = nothing )
 
-    checkArgument( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
+    checkState( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
     checkArgument( !hasevent( ϵ, event ), "event $event already registered in EventProcessor.registeredEvents" )
 
     push!( ϵ.registeredEvents, event )
@@ -59,18 +59,19 @@ end
 
 
 function enqueueEvent!( ϵ::EventProcessor, event::Event )
-    checkArgument( !( event in EXCLUDED_EVENTS ), "$event cannot be queued. It gets called automatically at a predefined time." )
+    checkArgument( !( event in EXCLUDED_EVENTS ), "$event cannot be manually enqueued. It gets called automatically at a predefined time." )
     checkArgument( hasevent( ϵ, event ) , "event $event not registered in EventProcessor.registeredEvents.\n(Registered events: $(ϵ.registeredEvents))" )
-    push!( ϵ.enqueuedEvents, QueuedEvent(event) )
+    push!( ϵ.queuedEvents, QueuedEvent(event) )
 end
 
 
 function dispatchEvents!( ϵ::EventProcessor, logicHandler::LogicHandler )
     # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
     # so that when we sort it by priority we don't have to reverse the sort order
-    sort!( ϵ.enqueuedEvents )
-    while !(ϵ.enqueuedEvents |> isempty)
-        dispatchedEvent = popfirst!(ϵ.enqueuedEvents).event
+    sort!( ϵ.queuedEvents )
+
+    while !(ϵ.queuedEvents |> isempty)
+        dispatchedEvent = popfirst!(ϵ.queuedEvents).event
         dispatchSingleEvent( ϵ, logicHandler, dispatchedEvent )
     end
     # the LOGIC_FRAME_END event is dispatched after all other events in a single logic frame,
@@ -83,7 +84,7 @@ end
 
 function dispatchSingleEvent( ϵ::EventProcessor, logicHandler::LogicHandler, event::Event )
     checkArgument( hasevent( ϵ, event ), "event $event not registered in EventProcessor.\n(Registered events: $(ϵ.registeredEvents))" )
-    @info "$(event.eventType)"
+    @debug "$(event.eventType)"
     #@collectstats HANDLE_SINGLE_EVENT
     onEvent( logicHandler, event )
 end
@@ -91,6 +92,6 @@ end
 
 function dispatchLogicFrameEnd( logicHandler::LogicHandler )
     # @collectstats HANDLE_SINGLE_EVENT
-    @info "LOGIC_FRAME_END"
+    @debug "LOGIC_FRAME_END"
     onLogicFrameEnd( logicHandler )
 end

@@ -30,7 +30,7 @@ function GlSample(width, height, title, vertices)
     window = GLFW.CreateWindow(width, height, title)
     GLFW.MakeContextCurrent(window)
 
-    drawData(vertices)
+    drawData(vertices, elements)
 
     while !GLFW.WindowShouldClose(window)
         GLFW.SwapBuffers(window)
@@ -44,7 +44,9 @@ function GlSample(width, height, title, vertices)
 
 end
 
-function drawData(vertices)
+GlSample() = GlSample( 800, 600, "sample", vertices )
+
+function drawData(vertices, elements)
      vao = getVAO()
      bindVAO(vao)
      vbo = getVBO()
@@ -54,8 +56,8 @@ function drawData(vertices)
      tex = glGenTextures()
      glBindTexture(GL_TEXTURE_2D, tex)
 
-     vertexShader = loadAndCompileShader("/home/gil/.atom/doomfishjl/shaders/sample.vert", GL_VERTEX_SHADER)
-     fragmentShader = loadAndCompileShader("/home/gil/.atom/doomfishjl/shaders/sample.frag", GL_FRAGMENT_SHADER)
+     vertexShader = loadAndCompileShader(shaderPathBase*"sample.vert", GL_VERTEX_SHADER)
+     fragmentShader = loadAndCompileShader(shaderPathBase*"sample.frag", GL_FRAGMENT_SHADER)
      shaderProgram = ShaderProgram()
 
      attachShader(shaderProgram, vertexShader)

@@ -18,7 +18,7 @@ end
 # can't be instantiated before opengl has initialized. ShaderProxys contain all the information
 # needed to construct a ShaderProgram but can be pre-defined. (see ShaderProxy.jl, allshaders.jl)
 
-ShaderProgram( proxy::ShaderProxy ) = ShaderProgram( proxy.vert, proxy.frag, proxy.geometry )
+ShaderProgram( proxy::ShaderProxy ) = ShaderProgram( proxy.vertex, proxy.fragment, proxy.geometry )
 
 
 # WARNING: as stated before, calls to ShaderProgram() will fail if opengl hasn't been initialized.

@@ -34,8 +34,8 @@ function runGlProgram( p::GlProgramBase )
     # but all they do is call single other functions, which were defined at parse time,
     # so my guess is it's ok.
     # we'll see.
-    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int ) =  mouseInputEvent( p, window, action, button, mods)
-    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int, action::GLFW.Action, mods::Int ) = keyInputEvent( p, action, key, mods )
+    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32 ) =  mouseInputEvent( p, window, action, button, mods)
+    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key, mods )
     try
         mainWindow = GlWindow( getWindowWidth(p), getWindowHeight(p), getWindowTitle(p),
                       keyCallback, mouseButtonCallback, startFullscreen )
@@ -114,6 +114,8 @@ function loopOnce( p::GlProgramBase )
             while true
                 if (skippingFrames)  metrics.counters.skippedFramesByLogicCounter += 1  end
                 @collectstats LOGIC begin
+                    # XXX this is NOT the proper use of the word "idempotent" Dom
+                    # betamax:
                     # the pause function continues logic updates because logic updates should be idempotent in the absence
                     # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
                     # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
@@ -121,11 +123,6 @@ function loopOnce( p::GlProgramBase )
                     beginLogicFrame!( p.frameClock )
                     updateLogic(p)
                 end
-                # betamax:
-                # the pause function continues logic updates because logic updates should be idempotent in the absence
-                # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
-                # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
-                # implementation.
                 skippingFrames = true
                 if moreLogicFramesNeeded( p.frameClock ) continue
                 else break end
