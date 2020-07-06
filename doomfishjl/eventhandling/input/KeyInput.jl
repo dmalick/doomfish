@@ -9,6 +9,4 @@ struct KeyInput <: Input
 end
 
 KeyInput( action::GLFW.Action, key::GLFW.Key ) = KeyInput( action, key, zero(Int32) )
-
-
-keyInput!(eventProcessor::EventProcessor, action::GLFW.Action, key::GLFW.Key, mods::Int32) = enqueueInput!( eventProcessor, KeyInput(action, key, mods) )
+KeyInput( eventType::KeyEventType, key::GLFW.Key ) = KeyInput( GLFW.Action( Int(eventType) ), key )

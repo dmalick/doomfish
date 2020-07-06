@@ -31,6 +31,7 @@ function nKeyTest(p::DumbshitGlProgram)
     keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key )
 
     p.eventProcessor.acceptingRegistrations = true
+    p.logicHandler.acceptingCallbacks = true
 
     registerEvent( p, GlobalEvent(KEY_PRESSED, key = GLFW.KEY_N), ()->( @info "`n` key pressed" ), input = KeyInput(GLFW.PRESS, GLFW.KEY_N) )
     registerEvent( p, GlobalEvent(KEY_RELEASED, key = GLFW.KEY_N), ()->( @info "`n` key released" ), input = KeyInput(GLFW.RELEASE, GLFW.KEY_N) )
@@ -38,6 +39,7 @@ function nKeyTest(p::DumbshitGlProgram)
     registerCallback!( p.logicHandler, GlobalEvent(LOGIC_FRAME_END), ()-> return )
 
     p.eventProcessor.acceptingRegistrations = false
+    p.logicHandler.acceptingCallbacks = false
 
     initGlfw()
 
@@ -67,16 +69,14 @@ function drawData(vertices)
      ebo = getVBO()
      bindAndLoadVBO( ebo, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, elements )
 
-     #checkGlError()
-
      shaderProgram = getShaderProgram( "sample" )
      @info "shaderProgram = $shaderProgram"
      useProgram( shaderProgram )
 
-     # WARNING: these calls to getAttribLocation will fail (or return -1) if they've
+     # WARNING: these calls to getAttribLocation will fail (return -1) if they've
      # already been called once in the current Julia REPL session.
      # calling GLFW.Terminate() will not fix this!
-     
+
      positionAttributeLocation = getAttribLocation( "position", shaderProgram )
      @info "typeof( positionAttributeLocation ) = $(typeof(positionAttributeLocation))"
      @info "value of positionAttributeLocation = $positionAttributeLocation"

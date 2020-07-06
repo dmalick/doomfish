@@ -5,8 +5,6 @@ include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 
 macro onEvent( event, callback )
-    checkArgument( argIs( event, :call ), "first arg to @onEvent must be an Event"  )
-    checkArgument( argIs( callback, :block ), "second arg to @onEvent must be a begin block" )
 
     # passing a non-Event into the below call will crash, by design.
     # it's easier than manually checking the argument.
@@ -15,6 +13,7 @@ macro onEvent( event, callback )
     return quote
         checkState( glProgram isa GlProgramBase, "cannot register event: glProgram not set or initialized" )
         checkEventRegistered( glProgram.EventProcessor, glProgram.LogicHandler, $event )
+
         registerEvent!( glProgram.EventProcessor, $event )
         registerCallback!( glProgram.LogicHandler, $event, ()-> $callback )
     end
