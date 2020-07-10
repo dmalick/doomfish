@@ -8,10 +8,11 @@ include("Event.jl")
 abstract type AbstractQueuedEvent end
 
 # we mess w/ the whole QueuedEvent abstraction rather than just doing a priority
-# queue b/c we don't want `event A` in the current logic frame queueing `event B`,
-# intended for the next logic frame, and have `event B` wind up jumping the queue.
-# Instead, we use QueuedEvent as a wrapper and define an isless() method for it
-# based on priority, and just sort!() the event queue as needed.
+# queue b/c Julia's PriorityQueue struct is essentially a Dict w/ value => priority
+# pairs, and like any Dict, each key (in this case, the value IS the key) must be unique.
+# We can't use this b/c the same event may be queued up multiple times. Instead, we
+# use QueuedEvent as a wrapper and define an isless() method for it based on priority,
+# and just sort!() the event queue as needed.
 # WARNING could be a performance problem, we'll see.
 
 struct QueuedEvent <: AbstractQueuedEvent

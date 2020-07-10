@@ -1,8 +1,8 @@
 include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/GlobalEvent.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/eventtypes/SpriteEvent.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/LogicHandler.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractEventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractLogicHandler.jl")
 include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 
@@ -15,7 +15,7 @@ include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 # But I'm not sure.
 
 
-struct ScriptWorld <: LogicHandler
+struct ScriptWorld <: AbstractLogicHandler
 
     eventProcessor::EventProcessor
 
@@ -33,7 +33,7 @@ end
 include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl")
 
 # I made the decision to keep registerCallback!() in ScriptWorld instead of putting it in the EventProcessor b/c
-# the callbacks really have nothing to do w/ anything but scripts, and how the LogicHandler (in this case ScriptWorld)
+# the callbacks really have nothing to do w/ anything but scripts, and how the AbstractLogicHandler (in this case ScriptWorld)
 # deals w/ them in the first place seems too implementation-specific to hardcode into something concrete
 # like the EventProcessor.
 function registerCallback!(σ::ScriptWorld, event::Event, callback::Function)

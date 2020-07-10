@@ -4,7 +4,7 @@ include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 
 
-struct GameLoopFrameClock <: FrameClock
+mutable struct GameLoopFrameClock <: FrameClock
 
     # betamax uses a java long type so we're casting this Int64 explicitly
     nextLogicFrameTime::Int64
@@ -17,7 +17,7 @@ struct GameLoopFrameClock <: FrameClock
     GameLoopFrameClock(nextLogicFrameTime::Int64) = new( nextLogicFrameTime, 0, targetFps, false )
 end
 
-GameLoopFrameClock() = GameLoopFrameClock(1)
+GameLoopFrameClock() = GameLoopFrameClock( time_ms() )
 
 
 function setPaused!(clock::GameLoopFrameClock, paused::Bool)
@@ -49,7 +49,9 @@ function beginLogicFrame!(clock::GameLoopFrameClock)
     # the hardcoded 1000 below is b/c we're using our own time_ms function
     # to measure time in milliseconds rather than Julia's time or time_ns
     # functions which measure in seconds and nanoseconds respectfully
-    clock.nextLogicFrameTime += 1000 / targetFps
+    # WARNING: `÷` uses floor() by default for rounding. to be on the
+    # conservative side, maybe we want ceil()?
+    clock.nextLogicFrameTime += 1000 ÷ targetFps
 end
 
 
@@ -61,7 +63,7 @@ end
 
 
 # WARNING: if the -1 below is a java 0-indexing thing we'll run into problems
-sleepTillNextLogicFrame(clock::GameLoopFrameClock) = sleepUntilPrecisely(clock.nextLogicFrameTime - 1)
+sleepUntilNextLogicFrame(clock::GameLoopFrameClock) = sleepUntilPrecisely(clock.nextLogicFrameTime - 1)
 
 
 moreLogicFramesNeeded(clock::GameLoopFrameClock) = return !clock.paused && (time_ms() > clock.nextLogicFrameTime)

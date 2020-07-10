@@ -2,8 +2,7 @@ include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/input/inputhandling.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
 #include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
-include("/home/gil/doomfish/doomfishjl/globalvars.jl")
-include("GlProgramBase.jl")
+include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl") # includes GlProgramBase, doomfishtool, globalvars
 include("GameLoopFrameClock.jl")
 
 
@@ -12,13 +11,14 @@ mutable struct DumbshitGlProgram <: GlProgramBase
     mainWindow::Union{ GlWindow, Nothing }
     frameClock::GameLoopFrameClock
 
-    eventProcessor::EventProcessor
+    eventRegistry::Union{ EventRegistry, Nothing }
+    eventProcessor::Union{ EventProcessor, Nothing }
     logicHandler::DefaultLogic
     #spriteRegistry::SpriteRegistry
 
 end
 
-DumbshitGlProgram() = DumbshitGlProgram( nothing, GameLoopFrameClock(), EventProcessor(), DefaultLogic(), #=SpriteRegistry()=# )
+DumbshitGlProgram() = DumbshitGlProgram( nothing, GameLoopFrameClock(), EventRegistry(), nothing, DefaultLogic(), #=SpriteRegistry()=# )
 
 
 function initialize()
@@ -45,6 +45,9 @@ end
 
 function updateLogic( p::DumbshitGlProgram )
     @debug "updateLogic"
+    pollEvents(p)
+    processInputs(p)
+    dispatchEvents(p)
 end
 
 
@@ -61,7 +64,7 @@ function processInputs( p::DumbshitGlProgram )
 end
 
 function dispatchEvents( p::DumbshitGlProgram )
-    dispatchEvents!(p.eventProcessor, p.logicHandler)
+    dispatchEvents!( p.eventProcessor, p.logicHandler )
 end
 
 getDebugMode( p::DumbshitGlProgram ) = return debugMode

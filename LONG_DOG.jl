@@ -11,35 +11,39 @@ elements = Array{UInt32}([0,1,2,2,3,0])
 
 
 
-function registerEvent( γ::DumbshitGlProgram, event::Event, callback::Function; input::Union{ Input, Nothing } = nothing )
+function registerEvent( γ::DumbshitGlProgram, event::Event, callback::Function )
     @info "registering Event $event with callback $callback $(input != nothing ? "on input $input" : "" )"
-    registerEvent!( γ.eventProcessor, event, input = input )
+    registerEvent!( γ.eventRegistry, event )
     registerCallback!( γ.logicHandler, event, callback )
 end
 
 
-function resetGlProgram(p::DumbshitGlProgram)
+function resetGlProgram( p::DumbshitGlProgram )
     p.mainWindow = nothing
     GLFW.Terminate()
     return DumbshitGlProgram()
 end
 
 
-function nKeyTest(p::DumbshitGlProgram)
+function nKeyTest( p::DumbshitGlProgram )
 
-    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32 ) = ()-> return # mouseInputEvent( p, window, action, button )
-    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key )
-
-    p.eventProcessor.acceptingRegistrations = true
-    p.logicHandler.acceptingCallbacks = true
-
-    registerEvent( p, GlobalEvent(KEY_PRESSED, key = GLFW.KEY_N), ()->( @info "`n` key pressed" ), input = KeyInput(GLFW.PRESS, GLFW.KEY_N) )
-    registerEvent( p, GlobalEvent(KEY_RELEASED, key = GLFW.KEY_N), ()->( @info "`n` key released" ), input = KeyInput(GLFW.RELEASE, GLFW.KEY_N) )
+    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_N), ()->( @info "`n` key pressed" ) )
+    registerEvent( p, GlobalEvent(KEY_RELEASE, GLFW.KEY_N), ()->( @info "`n` key released" ) )
     #registerEvent( p, GlobalEvent(KEY_REPEATED, key = GLFW.KEY_N), ()->( @info "`n` key repeated" ), input = KeyInput(GLFW.REPEAT, GLFW.KEY_N) )
     registerCallback!( p.logicHandler, GlobalEvent(LOGIC_FRAME_END), ()-> return )
 
-    p.eventProcessor.acceptingRegistrations = false
+    p.eventProcessor = EventProcessor( p.eventRegistry )
+    p.eventRegistry = nothing
     p.logicHandler.acceptingCallbacks = false
+
+end
+
+updateView( p::DumbshitGlProgram ) = drawElements( GL_TRIANGLES, 6, UInt32, 0 )
+
+function createWindow( p::DumbshitGlProgram )
+
+    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32 ) = ()-> return # mouseInputEvent( p, window, action, button )
+    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key )
 
     initGlfw()
 
@@ -47,13 +51,13 @@ function nKeyTest(p::DumbshitGlProgram)
     drawData(vertices)
 
     while !GLFW.WindowShouldClose( p.mainWindow.handle )
-        GLFW.SwapBuffers( p.mainWindow.handle )
-        GLFW.PollEvents()
-        if GLFW.GetKey( p.mainWindow.handle, GLFW.KEY_ESCAPE ) == true
-            GLFW.SetWindowShouldClose( p.mainWindow.handle, true )
-        end
-        processInputs(p)
-        dispatchEvents(p)
+
+        loopOnce(p)
+
+        # @renderPhase p.mainWindow begin
+        #     updateView(p)
+        #     drawElements( GL_TRIANGLES, 6, UInt32, 0 )
+        # end
     end
 
     GLFW.Terminate()
@@ -61,7 +65,7 @@ function nKeyTest(p::DumbshitGlProgram)
 end
 
 
-function drawData(vertices)
+function drawData( vertices )
      vao = getVAO()
      bindVAO(vao)
      vbo = getVBO()
@@ -82,12 +86,14 @@ function drawData(vertices)
      @info "value of positionAttributeLocation = $positionAttributeLocation"
 
      @checkGlError vertexAttribPointer( positionAttributeLocation, 2, Float32, false, 5, 0 )
+     #vertexAttribPointer( 0, 2, Float32, false, 5, 0 )
 
      colorAttributeLocation = getAttribLocation("inColor", shaderProgram)
      @info "typeof( colorAttributeLocation ) = $(typeof(colorAttributeLocation))"
      @info "value of colorAttributeLocation = $colorAttributeLocation"
 
      @checkGlError vertexAttribPointer( colorAttributeLocation, 3, Float32, false, 5, 2 )
+     #vertexAttribPointer( 1, 2, Float32, false, 5, 0 )
 
 
      # triangleColor = getUniformLocation("triangleColor", shaderProgram)
@@ -95,6 +101,5 @@ function drawData(vertices)
 
      #glDrawArrays(GL_POINTS, 0, 207944)
      #glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, C_NULL)
-     drawElements( GL_TRIANGLES, 6, UInt32, 0 )
 
 end

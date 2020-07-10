@@ -7,7 +7,7 @@ include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
 include("/home/gil/doomfish/doomfishjl/graphics/TextureRegistry.jl")
 include("/home/gil/doomfish/doomfishjl/graphics/SpriteTemplateRegistry.jl")
 
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractEventProcessor.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 
 include("/home/gil/doomfish/doomfishjl/scripting/ScriptWorld.jl")
@@ -22,7 +22,7 @@ struct DoomfishGlProgram <: GlProgramBase
     mainWindow::GlWindow
     frameClock::GameLoopFrameClock
     eventProcessor::EventProcessor
-    logicHandler::LogicHandler
+    logicHandler::AbstractLogicHandler
     # soundWorld::SoundWorld
     # soundRegistry::SoundRegistry
     textureRegistry::TextureRegistry

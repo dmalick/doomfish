@@ -123,7 +123,7 @@ function closeWindow( glWindow::GlWindow )
      glWindow.isDestroyed = true
 end
 
-function windowToTextureCoordinate( x::Float64, y::Float64 )
+function windowToCoordinate( x::Float64, y::Float64; coordType::GlCoordinate = TextureCoordinate )
     if glWindow.fullscreen
         vidmode = getResolution()
         fieldWidth = vidmode.width
@@ -133,24 +133,20 @@ function windowToTextureCoordinate( x::Float64, y::Float64 )
         fieldHeight = glWindow.height
     end
 
-    return TextureCoordinate( x / fieldWidth, 1.0 - y / fieldHeight )
+    # we start with a TextureCoordinate (b/c the math is simpler), and convert from there.
+    return convert( coordType, TextureCoordinate( x / fieldWidth, 1.0 - y / fieldHeight ) )
 end
 
 
 # WARNING mouse cursor coordinates are wrapped in separate DoubleBuffers in the original betamax code.
 # be aware that this may come to bite us.
-function getCursorPosition( glWindow::GlWindow )
-    cursorPosition = GLFW.GetCursorPos( glWindow.handle )
-    x = cursorPosition.x
-    y = cursorPosition.y
-    return windowToTextureCoordinate( x, y )
-end
+getCursorPosition( glWindow::GlWindow; coordType::GlCoordinate = TextureCoordinate ) = getCursorPosition( glWindow.handle, coordType )
 
-function getCursorPosition( windowHandle::Int64 )
+function getCursorPosition( windowHandle::Int64; coordType::GlCoordinate = TextureCoordinate )
     cursorPosition = GLFW.GetCursorPos( windowHandle )
     x = cursorPosition.x
     y = cursorPosition.y
-    return windowToTextureCoordinate( x, y )
+    return windowToCoordinate( x, y, coordType )
 
     # original betamax code:
     # private final DoubleBuffer xMousePosBuffer = BufferUtils.createDoubleBuffer(1);

@@ -1,5 +1,5 @@
 include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractEventProcessor.jl")
 
 
 # sprite-specific calls requiring access to both the SpriteRegistry and the EventProcessor

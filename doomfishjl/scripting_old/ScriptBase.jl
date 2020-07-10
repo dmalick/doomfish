@@ -1,12 +1,12 @@
 include("/home/gil/doomfish/pseudointerface/interface/Interface.jl")
-include("/home/gil/doomfish/doomfishjl/eventhandling/logic/LogicHandler.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/logic/AbstractLogicHandler.jl")
 
 
 @interface ScriptBase begin
 
     spriteRegistry::SpriteRegistry
     eventProcessor::EventProcessor
-    logicHandler::LogicHandler
+    logicHandler::AbstractLogicHandler
 
     stateVariables::Dict{ String, Any }
     initializing::Bool

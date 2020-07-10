@@ -12,7 +12,7 @@ crashTextureFile = ""
 
 metrics = Metrics()
 
-program = nothing
+glProgram = nothing
 
 # constants
 

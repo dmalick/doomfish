@@ -1,5 +1,5 @@
 using GLFW
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractEventProcessor.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl") # includes coordinates.jl
 include("KeyInput.jl")
 include("MouseInput.jl")
@@ -9,10 +9,10 @@ include("MouseInput.jl")
 # they'll get assigned as the key/mousebutton callbacks for the GLFW window.
 
 
-keyInput( eventProcessor::EventProcessor, action::GLFW.Action, key::GLFW.Key ) = enqueueInput!( eventProcessor,
+keyInput( eventProcessor::AbstractEventProcessor, action::GLFW.Action, key::GLFW.Key ) = enqueueInput!( eventProcessor,
                                                                                                 KeyInput( action, key ) )
 
-function mouseInput( eventProcessor::EventProcessor, window::Int64, action::GLFW.Action, button::GLFW.MouseButton )
+function mouseInput( eventProcessor::AbstractEventProcessor, window::Int64, action::GLFW.Action, button::GLFW.MouseButton )
     @info "queueing mouse input for window $window"
     coord = getCursorPosition( window )
     if (coord |> isValidCoordinate)

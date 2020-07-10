@@ -5,7 +5,6 @@ abstract type Event end
 
 
 Key = Union{ GLFW.Key, Nothing }
-MouseButton = Union{ GLFW.MouseButton, Nothing }
 Moment = Union{ Int, Nothing }
 
 

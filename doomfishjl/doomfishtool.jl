@@ -9,16 +9,16 @@ filepattern = r".+\..+"
 jlpattern = r".+\.jl"
 extpattern = r"\..+"
 
+includeDir( dir::String ) = include.( [ dir*file for file in readdir(dir) if occursin( filepattern, file ) ] )
+
 function includeFiles( dir::String; ext::String=".jl" )
     checkArgument( occursin(extpattern, ext), "invalid file extension: $ext" )
-    filepattern = Regex(".+$(ext)")
-    include.( [ dir*file for file in readdir(dir) if occursin(filepattern, file) ] )
+    include.( [ dir*file for file in readdir(dir) if occursin( Regex(".+$(ext)"), file ) ] )
 end
 
 function includeFiles( dir::String, files::String... )
-    include.([dir*file for file in files if occursin(filepattern, file)])
+    include.( [dir*file for file in files if occursin(filepattern, file)] )
 end
-
 
 
 # note that any object we want to force freeing memory of must be allowed to have a value of nothing.
@@ -29,7 +29,6 @@ function freeMem(obj)
     obj = nothing
     GC.gc()
 end
-
 
 
 # convenience functions for safety checks
@@ -78,13 +77,16 @@ end
 # and saves them all. this would eventually eat up a lot of memory, so I don't want
 # to use it until performance testing.
 macro collectstats( statsName, body )
-    checkArgument( statsName isa Symbol && eval(statsName) isa StatsName, "1st arg to @collecttimes must be a StatsName" )
+    checkArgument( statsName isa Symbol && ( name = eval(statsName) ) isa StatsName, "1st arg to @collecttimes must be a StatsName" )
     checkArgument( body isa Expr && body.head in (:call, :block, :macrocall, :->), "2nd arg to @collecttimes must be a function, macrocall, or begin block (got $body)" )
 
-    statsName = eval(statsName)
-    if !haskey( metrics.timeStats, statsName ) metrics.timeStats[statsName] = TimeStats() end
+    checkKeyCall = esc(:(if !haskey( metrics.timeStats, $name ) metrics.timeStats[$name] = TimeStats() end))
+    updateCall = esc(:(updateStats!(metrics.timeStats[$name], @timed( $body )...)))
 
-    return esc( :(updateStats!( metrics.timeStats[$statsName], @timed( $body )... )) )
+    return quote
+        $checkKeyCall
+        $updateCall
+    end
 end
 
 
@@ -168,3 +170,13 @@ function cachedFilename(key::String...)
 end
 
 cachedFilename(key::Tuple) = cachedFilename(key...)
+
+
+
+function putifexists( collection::AbstractDict, containerType::Type{T}, key, value ) where T <: AbstractArray
+    if !haskey( collection, key ) collection[key] = containerType() end
+    push!( collection[key], value )
+end
+
+
+putifexists( collection::AbstractDict, key, value ) = putifexists( collection, typeof(collection).parameters[2], key, value )

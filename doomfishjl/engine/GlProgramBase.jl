@@ -91,18 +91,16 @@ pollEvents( p::GlProgramBase ) = pollEvents( p.mainWindow )
 
 
 function loopOnce( p::GlProgramBase )
-    # XXX not sure whether to do inputs before or after processing the frame
-    @collectstats INPUT_TIME processInputs(p)
 
     @collectstats IDLE_TIME begin
-        @collectstats IDLE_TIME_5SEC begin
-            if !sleepTilNextLogicFrame() metrics.counters.skippedFramesByRenderCounter += 1 end
-        end
+        #@collectstats IDLE_TIME_5SEC begin
+        if !sleepUntilNextLogicFrame( p.frameClock ) metrics.counters.skippedFramesByRenderCounter += 1 end
+        #end
     end
     @collectstats VIDEO_FRAME_DRIFT begin
         # betamax:
         # careful moving videoFrameDriftTimer. It should start exactly when frameClock increments in its
-        # beginLogicFrame and exactly when glfwSwapBuffers is called at the end of RenderPhase#close.
+        # beginLogicFrame and  end exactly when glfwSwapBuffers is called at the end of RenderPhase#close.
         # That said we are double buffered I guess so I'm not accounting for the time between the glfwSwapBuffers
         # call and the actual screen update. We don't exactly enclose those points here but it's fine because
         # and only as long as the other operations in between are of negligible time. I did check those BTW
@@ -110,27 +108,34 @@ function loopOnce( p::GlProgramBase )
         # mark the videoFrameDriftTimer
         @collectstats FULL_LOGIC begin
             skippingFrames = false
-            # half assed, probably bad version of a java do-while loop
-            while true
-                if (skippingFrames)  metrics.counters.skippedFramesByLogicCounter += 1  end
-                @collectstats LOGIC begin
-                    # XXX this is NOT the proper use of the word "idempotent" Dom
-                    # betamax:
-                    # the pause function continues logic updates because logic updates should be idempotent in the absence
-                    # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
-                    # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
-                    # implementation.
-                    beginLogicFrame!( p.frameClock )
-                    updateLogic(p)
-                end
-                skippingFrames = true
-                if moreLogicFramesNeeded( p.frameClock ) continue
-                else break end
-            end
+            totalSkippedFrames = 0
+
+            # WARNING: half assed, probably bad version of a java do-while loop.
+            while ( skippingFrames = logicLoopOnce( p, skippingFrames ) ) continue end
+            if debugMode && totalSkippedFrames < 0 @debug "total skipped frames: $totalSkippedFrames" end
         end
         # @renderPhase includes the call to @collectstats RENDER
         @renderPhase p.mainWindow begin
             updateView(p)
         end
     end
+end
+
+
+function logicLoopOnce( p::GlProgramBase, skippingFrames::Bool )
+    if skippingFrames
+        metrics.counters.skippedFramesByLogicCounter += 1
+        if debugMode totalSkippedFrames += 1 end
+    end
+    @collectstats LOGIC begin
+        # XXX this is NOT the proper use of the word "idempotent" Dom
+        # betamax:
+        # the pause function continues logic updates because logic updates should be idempotent in the absence
+        # of user input, which can be useful. The frame clock should be checked and if duplicate frames are
+        # received, no new time-triggered events should happen. This is the responsibility of the updateLogic
+        # implementation.
+        beginLogicFrame!( p.frameClock )
+        updateLogic(p)
+    end
+    return moreLogicFramesNeeded( p.frameClock )
 end

@@ -1,4 +1,4 @@
-include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
+using GLFW
 include("Input.jl")
 
 

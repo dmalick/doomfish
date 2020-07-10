@@ -1,75 +1,60 @@
-include("event/QueuedEvent.jl")
-include("event/GlobalEvent.jl")
-include("input/Input.jl")
-include("logic/LogicHandler.jl")
+
+include("event/QueuedEvent.jl") # includes Event.jl
+include("AbstractEventProcessor.jl")
+include("logic/DefaultLogic.jl")
 
 
 # a queueable unique object for signaling when to stop event dispatch
 # and wait for the next logic frame.
 struct LogicFrameEnd <: AbstractQueuedEvent end
 
-# these event types occur only at predefined times, and cannot be queued.
-EXCLUDED_EVENTS = [ GlobalEvent( BEGIN ), GlobalEvent( LOGIC_FRAME_END ) ]
 
-# This structure has been simplified significantly. What the EventProcessor now
-# does is map inputs to events, and tells the LogicHandler what
-# events to invoke based on the gamestate, and the order in which to invoke them.
-# We no longer reference specific subtypes of Events or Inputs anywhere, nor do we mess
-# w/ callbacks. We'll let the LogicHandler (whatever it may be) deal w/ all that.
-# Events and Inputs being abstract types, and the LogicHandler being an interface,
-# any number of varying structures can be built around this single EventProcessor.
+# differs from the first incarnation of the EventProcessor in that we no longer
+# deal w/ event registration directly, and instead construct the EventProcessor
+# from a separate EventRegistry which is only instantiated during script loading,
+# before the world has begun. The EventProcessor is then created at the same time
+# the world is, and is therefore not directly modifiable by scripts.
 
-mutable struct EventProcessor
-
-    inputMap::Dict{ Input, Event }
+struct EventProcessor <: AbstractEventProcessor
     inputQueue::Vector{ Input }
+    inputMap::Dict{ Input, Vector{Event} }
 
-    registeredEvents::Vector{ Event }
     eventQueue::Vector{ AbstractQueuedEvent }
-
-    # WARNING before I shrunk this, we kept track of the last dispatched moment w/ a variable here.
-    # may need to keep track of it somewhere else (like the LogicHandler).
-
-    acceptingRegistrations::Bool # = false
-
-    EventProcessor() = new( Dict{Input, Event}(), Vector{Input}(), Vector{Event}(), Vector{QueuedEvent}(), false )
+    registeredEvents::Vector{ Event }
 end
 
-hasevent( ϵ::EventProcessor, event::Event ) = return event in ϵ.registeredEvents
+
+function EventProcessor( ρ::EventRegistry )
+    inputMap = Dict{ Input, Vector{Event} }( input => filter( event -> event.input == input, ρ.registeredEvents )
+                                             for input in ρ.registeredInputs )
+
+    @info "EventProcessor created from EventRegistry $ρ"
+    return EventProcessor( Vector{ Input }(), inputMap, Vector{ Event }(), ρ.registeredEvents )
+end
 
 
-# we use the popfirst! / push! style queue to be consistent w/ the event queue
+# input handling
+
 enqueueInput!( ϵ::EventProcessor, input::Input ) = haskey( ϵ.inputMap, input ) ? push!( ϵ.inputQueue, input ) : return
 
-
 function processInputs!( ϵ::EventProcessor )
-    # we use the popfirst! / push! style queue to be consistent w/ the event queue
     while !(ϵ.inputQueue |> isempty)
-        enqueueEvent!( ϵ, ϵ.inputMap[ popfirst!(ϵ.inputQueue) ] )
+        for event in ϵ.inputMap[ popfirst!(ϵ.inputQueue) ]
+            enqueueEvent!( ϵ, event )
+        end
     end
 end
 
 
-function registerEvent!( ϵ::EventProcessor, event::Event; input::Input = nothing )
-    checkArgument( !( event in EXCLUDED_EVENTS ), "$event cannot be registered. It gets called automatically at a predefined time." )
-    checkState( ϵ.acceptingRegistrations, "cannot register events after world has already begun" )
-    checkArgument( !hasevent( ϵ, event ), "event $event already registered in EventProcessor.registeredEvents" )
-
-    push!( ϵ.registeredEvents, event )
-    if nothing != input
-        ϵ.inputMap[input] = event
-    end
-end
-
+# event processing
 
 function enqueueEvent!( ϵ::EventProcessor, event::Event )
-    checkArgument( !( event in EXCLUDED_EVENTS ), "$event cannot be manually enqueued. It gets called automatically at a predefined time." )
-    checkArgument( hasevent( ϵ, event ) , "event $event not registered in EventProcessor.registeredEvents.\n(Registered events: $(ϵ.registeredEvents))" )
+    checkArgument( event in ϵ.registeredEvents , "event $event not registered in EventProcessor.registeredEvents.\n(Registered events: $(ϵ.registeredEvents))" )
     push!( ϵ.eventQueue, QueuedEvent(event) )
 end
 
 
-function dispatchEvents!( ϵ::EventProcessor, logicHandler::LogicHandler )
+function dispatchEvents!( ϵ::EventProcessor, logicHandler::AbstractLogicHandler )
     # we use the push! / popfirst! (1st element first, 2nd element second, etc) style queue
     # so that when we sort it by priority we don't have to reverse the sort order
     sort!( ϵ.eventQueue )
@@ -79,25 +64,10 @@ function dispatchEvents!( ϵ::EventProcessor, logicHandler::LogicHandler )
     push!( ϵ.eventQueue, LogicFrameEnd() )
 
     while (nextQueuedEvent = popfirst!(ϵ.eventQueue)) !== LogicFrameEnd()
-        dispatchSingleEvent( ϵ, logicHandler, nextQueuedEvent.event )
+        onEvent( logicHandler, nextQueuedEvent.event )
     end
     # the LOGIC_FRAME_END event is dispatched after all other events in a single logic frame,
     # intended as a propagation/cleanup step. I debated making this a requirement at all, but
-    # if the LogicHandler implementation has no use for it, it can just implement an empty call.
-    dispatchLogicFrameEnd( logicHandler )
-end
-
-
-function dispatchSingleEvent( ϵ::EventProcessor, logicHandler::LogicHandler, event::Event )
-    checkArgument( hasevent( ϵ, event ), "event $event not registered in EventProcessor.\n(Registered events: $(ϵ.registeredEvents))" )
-    @debug "$(event.eventType)"
-    #@collectstats HANDLE_SINGLE_EVENT
-    onEvent( logicHandler, event )
-end
-
-
-function dispatchLogicFrameEnd( logicHandler::LogicHandler )
-    # @collectstats HANDLE_SINGLE_EVENT
-    @debug "LOGIC_FRAME_END"
+    # if the AbstractLogicHandler implementation has no use for it, it can just implement an empty call.
     onLogicFrameEnd( logicHandler )
 end

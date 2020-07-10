@@ -1,31 +1,38 @@
 import Base.show
 
-@enum GlobalEventType begin
-    BEGIN
+
+@enum SharedEventType begin
     MOMENT
-    LOGIC_FRAME_END # formerly PROPAGATE
+    LOGIC_FRAME_END
+end
 
-    KEY_PRESSED
-    KEY_RELEASED
-    KEY_REPEATED
 
-    MOUSE_CLICK
-    MOUSE_RELEASE
+@enum KeyEventType begin
+    KEY_PRESS   = Int( GLFW.PRESS )
+    KEY_RELEASE = Int( GLFW.RELEASE )
+    KEY_REPEAT  = Int( GLFW.REPEAT )
+end
 
+
+@enum MouseEventType begin
+    MOUSE_BUTTON_PRESS   = Int( GLFW.PRESS )
+    MOUSE_BUTTON_RELEASE = Int( GLFW.RELEASE )
+    MOUSE_BUTTON_REPEAT  = Int( GLFW.REPEAT )
+end
+
+
+@enum GlobalOnlyEventType begin
+    BEGIN
     REBOOT
 end
 
 
-@enum SpriteEventType begin
+@enum SpriteOnlyEventType begin
     # sprite events, specific to exactly one sprite
     SPRITE_CREATE
     SPRITE_DESTROY
 
     SPRITE_CLICK
-
-    SPRITE_KEY_PRESSED
-    SPRITE_KEY_RELEASED
-    SPRITE_KEY_REPEATED
 
     SPRITE_COLLIDE
 
@@ -36,4 +43,6 @@ end
 # WARNING the `;` suppresses the "show_datatype" call, which causes a crash w/ a union of
 # more than one enum.
 # seems like you oughta deal w/ that, Julia.
-EventType = Union{SpriteEventType, GlobalEventType};
+EventType =       Union{ SpriteOnlyEventType, GlobalOnlyEventType, KeyEventType, MouseEventType, SharedEventType };
+GlobalEventType = Union{ GlobalOnlyEventType, KeyEventType, MouseEventType, SharedEventType };
+SpriteEventType = Union{ SpriteOnlyEventType, KeyEventType, MouseEventType, SharedEventType };
