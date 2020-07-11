@@ -11,7 +11,8 @@ include("/home/gil/doomfish/doomfishjl/opengl/ShaderProgram.jl")
 allShaders = Dict{ String, ShaderProxy }(
     "default" => ShaderProxy( "default.vert", "default.frag" ),
     "sample"  => ShaderProxy( "sample.vert", "sample.frag" ),
-    "altsample" => ShaderProxy( "alt.vert", "sample.frag" )
+    "altsample" => ShaderProxy( "alt.vert", "sample.frag" ),
+    "corners" => ShaderProxy( "corners.vert", "sample.frag" )
 )
 
 

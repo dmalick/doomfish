@@ -123,8 +123,8 @@ end
 
 
 function prepareForDrawing()
-    vbo = getVBO()
-    vao = getVAO()
+    vbo = VBO()
+    vao = VAO()
     bindVAO(vao)
     bindAndLoadVBO( vbo, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, [
     # TODO: implement variable sprite positions

@@ -1,5 +1,33 @@
+
+macro NJGov( body )
+    return esc( quote
+        $body
+        println(""" ____      ____      ______________ """)
+        println("""|    \\    |    |    |              |""")
+        println("""|     \\   |    |    |     ____     |""")
+        println("""|      \\  |    |    |    |    |    |""")
+        println("""|       \\ |    |    |    |    |    |""")
+        println("""|        \\|    |    |    |    |    |""")
+        println("""|    |\\        |    |    |    |    |""")
+        println("""|    | \\       |    |    |    |    |""")
+        println("""|    |  \\      |    |    |____|    |""")
+        println("""|    |   \\     |    |              |""")
+        println("""|____|    \\____|    |______________|""")
+    end )
+end
+
+
+
+
+
+
+
+
+
 include("doomfishjl/engine/allshaders.jl")
 include("doomfishjl/engine/DumbshitGlProgram.jl")
+include("doomfishjl/scripting/onEvent.jl")
+includeFiles( "/home/gil/doomfish/doomfishjl/opengl/", "VAO.jl", "VBO.jl" )
 
 
 vertices = Array{Float32}([-0.5,  0.5, 1.0, 0.0, 0.0,
@@ -10,9 +38,12 @@ vertices = Array{Float32}([-0.5,  0.5, 1.0, 0.0, 0.0,
 elements = Array{UInt32}([0,1,2,2,3,0])
 
 
+mainGlProgram = DumbshitGlProgram()
+
 
 function registerEvent( γ::DumbshitGlProgram, event::Event, callback::Function )
-    @info "registering Event $event with callback $callback $(input != nothing ? "on input $input" : "" )"
+    @info "registering Event $event with callback $callback $(event.input != nothing ? "on input $(event.input)" : "" )"
+    checkState( γ.eventRegistry != nothing, "cannot register $Event; EventProcessor already initialized" )
     registerEvent!( γ.eventRegistry, event )
     registerCallback!( γ.logicHandler, event, callback )
 end
@@ -29,6 +60,11 @@ function nKeyTest( p::DumbshitGlProgram )
 
     registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_N), ()->( @info "`n` key pressed" ) )
     registerEvent( p, GlobalEvent(KEY_RELEASE, GLFW.KEY_N), ()->( @info "`n` key released" ) )
+
+    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_S, mods = GLFW.MOD_CONTROL), ()-> display(metrics.timeStats) )
+    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_D, mods = GLFW.MOD_CONTROL), ()-> ( ENV["JULIA_DEBUG"] = Main ) )
+
+    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_ESCAPE), ()-> setShouldClose(p.mainWindow, true) )
     #registerEvent( p, GlobalEvent(KEY_REPEATED, key = GLFW.KEY_N), ()->( @info "`n` key repeated" ), input = KeyInput(GLFW.REPEAT, GLFW.KEY_N) )
     registerCallback!( p.logicHandler, GlobalEvent(LOGIC_FRAME_END), ()-> return )
 
@@ -38,12 +74,14 @@ function nKeyTest( p::DumbshitGlProgram )
 
 end
 
+
 updateView( p::DumbshitGlProgram ) = drawElements( GL_TRIANGLES, 6, UInt32, 0 )
+
 
 function createWindow( p::DumbshitGlProgram )
 
-    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32 ) = ()-> return # mouseInputEvent( p, window, action, button )
-    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key )
+    mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32) = ()-> return # mouseInputEvent( p, window, action, button )
+    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key, mods )
 
     initGlfw()
 
@@ -51,26 +89,21 @@ function createWindow( p::DumbshitGlProgram )
     drawData(vertices)
 
     while !GLFW.WindowShouldClose( p.mainWindow.handle )
-
         loopOnce(p)
-
-        # @renderPhase p.mainWindow begin
-        #     updateView(p)
-        #     drawElements( GL_TRIANGLES, 6, UInt32, 0 )
-        # end
     end
 
     GLFW.Terminate()
+    if outputStats display( metrics.timeStats ) end
 
 end
 
 
 function drawData( vertices )
-     vao = getVAO()
+     vao = VAO()
      bindVAO(vao)
-     vbo = getVBO()
+     vbo = VBO()
      bindAndLoadVBO( vbo, GL_ARRAY_BUFFER, GL_STATIC_DRAW, vertices )
-     ebo = getVBO()
+     ebo = VBO()
      bindAndLoadVBO( ebo, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, elements )
 
      shaderProgram = getShaderProgram( "sample" )

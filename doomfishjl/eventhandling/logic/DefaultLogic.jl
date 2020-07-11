@@ -1,5 +1,5 @@
 include("/home/gil/doomfish/doomfishjl/eventhandling/event/Event.jl")
-include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 include("AbstractLogicHandler.jl")
 
 
@@ -44,20 +44,18 @@ end
 function onEvent( λ::DefaultLogic, event::Event )
     callback = getCallback( λ, event )
     @debug "handling event $event via $callback"
-    # @collectstats INVOKE_EVENT_CALLBACK callback()
-    callback()
+    @collectstats INVOKE_EVENT_CALLBACK callback()
 end
 
 
 function onBegin( λ::DefaultLogic )
     @info "onBegin"
-    # @collectstats INVOKE_BEGIN_CALLBACK
-    onEvent( λ, GlobalEvent( BEGIN ) )
+    @collectstats INVOKE_BEGIN_CALLBACK onEvent( λ, GlobalEvent( BEGIN ) )
 end
 
 
 function onLogicFrameEnd( λ::DefaultLogic )
     # @debug "end of logic frame propagation step"
-    # @collectstats INVOKE_LOGIC_FRAME_END_CALLBACK
-    onEvent( λ, GlobalEvent( LOGIC_FRAME_END ) )
+    callback = getCallback( λ, GlobalEvent( LOGIC_FRAME_END ) )
+    @collectstats INVOKE_LOGIC_FRAME_END_CALLBACK callback()
 end

@@ -3,10 +3,6 @@ includeDir("/home/gil/doomfish/doomfishjl/eventhandling/event/events/")
 include("onEvent.jl")
 
 
-checkInit( init::Bool=true ) = checkState( init === (glProgram isa GlProgramBase && glProgram.mainWindow && glProgram.eventProcessor != nothing ),
-    "main program (global var `glProgram`) $( init ? "not set or fully initialized" : "already initialized" )." )
-
-
 function loadScripts( p::GlProgramBase )
 
     p.logicHandler.acceptingCallbacks = true
@@ -18,7 +14,12 @@ function loadScripts( p::GlProgramBase )
 end
 
 
-function getCursorPosition( ;coordType::Type{T} = TextureCoordinate )::GlCoordinate where T <: GlCoordinate
+
+checkInit( init::Bool=true ) = checkState( init == (mainGlProgram isa GlProgramBase && mainGlProgram.mainWindow && mainGlProgram.eventProcessor != nothing ),
+"main program (global var `mainGlProgram`) $( init ? "not set or fully initialized" : "already initialized" )." )
+
+
+function getCursorPosition( ;window::GlWindow = mainGlProgram.mainWindow, coordType::Type{T} = TextureCoordinate )::GlCoordinate where T <: GlCoordinate
     checkInit()
-    return getCursorPosition( glProgram.mainWindow, coordType )
+    return getCursorPosition( mainGlProgram.mainWindow, coordType )
 end

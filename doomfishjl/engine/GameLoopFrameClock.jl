@@ -14,7 +14,7 @@ mutable struct GameLoopFrameClock <: FrameClock
     paused::Bool # = false
 
     # WARNING it looks like the java doesn't explicitly define a constructor for this(?)
-    GameLoopFrameClock(nextLogicFrameTime::Int64) = new( nextLogicFrameTime, 0, targetFps, false )
+    GameLoopFrameClock( nextLogicFrameTime::Int64 ) = new( nextLogicFrameTime, 0, targetFps, false )
 end
 
 GameLoopFrameClock() = GameLoopFrameClock( time_ms() )
@@ -51,7 +51,7 @@ function beginLogicFrame!(clock::GameLoopFrameClock)
     # functions which measure in seconds and nanoseconds respectfully
     # WARNING: `÷` uses floor() by default for rounding. to be on the
     # conservative side, maybe we want ceil()?
-    clock.nextLogicFrameTime += 1000 ÷ targetFps
+    clock.nextLogicFrameTime += ceil( 1000 / targetFps )
 end
 
 
@@ -63,7 +63,7 @@ end
 
 
 # WARNING: if the -1 below is a java 0-indexing thing we'll run into problems
-sleepUntilNextLogicFrame(clock::GameLoopFrameClock) = sleepUntilPrecisely(clock.nextLogicFrameTime - 1)
+sleepUntilNextLogicFrame(clock::GameLoopFrameClock) = sleepUntilPrecisely(clock.nextLogicFrameTime - 1 )
 
 
 moreLogicFramesNeeded(clock::GameLoopFrameClock) = return !clock.paused && (time_ms() > clock.nextLogicFrameTime)

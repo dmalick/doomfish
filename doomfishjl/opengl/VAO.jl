@@ -9,7 +9,7 @@ struct VAO
 end
 
 
-function getVAO()
+function VAO()
     return VAO(glGenVertexArrays())
 end
 

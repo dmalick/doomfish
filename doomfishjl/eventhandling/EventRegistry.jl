@@ -16,7 +16,7 @@ end
 function registerEvent!( ϵ::EventRegistry, event::Event )
     checkArgument( !( event in ϵ.registeredEvents ), "event $event already registered" )
 
-    @info "registering event $event"
+    #@info "registering event $event"
     push!( ϵ.registeredEvents, event )
     if hasfield( typeof(event), :input ) && !( event.input in ϵ.registeredInputs )
         push!( ϵ.registeredInputs, event.input )

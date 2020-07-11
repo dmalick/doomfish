@@ -1,11 +1,12 @@
 #version 330 core
 
-in vec2 fTexPos;
+in vec2 txrPosition;
+
+uniform sampler2D txr;
 
 out vec4 outColor;
 
-uniform sampler2D ourTexture; // FIXME using default texture unit should assign it
+void main(){
 
-void main() {
-    outColor = texture(ourTexture, fTexPos);
+    outColor = texture(txr, txrPosition);
 }

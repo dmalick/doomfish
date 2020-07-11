@@ -12,7 +12,7 @@ crashTextureFile = ""
 
 metrics = Metrics()
 
-glProgram = nothing
+mainGlProgram = nothing
 
 # constants
 
@@ -47,11 +47,12 @@ const usePrecompiledAssetLists = true
 const textureMaxFramesForResidentMemoryStrategy = 10
 const texturePreloadFrameLookahead = 16
 
-const defaultGlobalShaderName = nothing
+const defaultGlobalShaderName = "sample"
 
 # state variables
 
 debugMode = false
+outputStats = true
 
 startFullscreen = false
 

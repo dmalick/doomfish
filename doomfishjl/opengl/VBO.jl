@@ -4,7 +4,7 @@ struct VBO
     handle::UInt32
 end
 
-function getVBO()
+function VBO()
     return VBO(glGenBuffers())
 end
 

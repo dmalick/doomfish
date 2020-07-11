@@ -1,8 +1,9 @@
+using GLFW
 include("/home/gil/doomfish/pseudointerface/interface/Interface.jl")
 include("/home/gil/doomfish/doomfishjl/engine/FrameClock.jl")
-include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
+# include("/home/gil/doomfish/doomfishjl/graphics/Texture.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/GlWindow.jl")
-include("/home/gil/doomfish/doomfishjl/globalvars.jl")
+include("/home/gil/doomfish/doomfishjl/doomfishtool.jl")
 
 @interface GlProgramBase begin
 
@@ -15,8 +16,8 @@ end
 @abstractMethod GlProgramBase keyInputEvent( key::GLFW.Key, action::GLFW.Action, mods::Int )
 @abstractMethod GlProgramBase mouseInputEvent( window::GLFW.Window, action::GLFW.Action, button::GLFW.MouseButton, mods::Int )
 @abstractMethod GlProgramBase processInputs()
+@abstractMethod GlProgramBase initView()
 # updateView could be called every frame, more than once per frame, less often, etc.
-# betamax: it must be idempotent (not sure you're using that word right Dom)
 @abstractMethod GlProgramBase updateView()
 # updateLogic will be called exactly once per logical frame, ie, once for frame 0, then once for frame 1, etc
 @abstractMethod GlProgramBase updateLogic()
@@ -26,68 +27,67 @@ end
 @abstractMethod GlProgramBase getDebugMode() # TODO: get from command line property
 @abstractMethod GlProgramBase expensiveInitialize()
 @abstractMethod GlProgramBase close()
+@abstractMethod GlProgramBase onExit()
 
 
 function runGlProgram( p::GlProgramBase )
-    initGlfw( getDebugMode(p) )
+    initGlfw( debug=getDebugMode(p) )
     # FIXME(?) kinda don't like having to define the key/mouse callbacks at runtime,
     # but all they do is call single other functions, which were defined at parse time,
     # so my guess is it's ok.
     # we'll see.
     mouseButtonCallback( window::GLFW.Window, button::GLFW.MouseButton, action::GLFW.Action, mods::Int32 ) =  mouseInputEvent( p, window, action, button, mods)
-    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key, mods )
+    keyCallback( window::GLFW.Window, key::GLFW.Key, scancode::Int32, action::GLFW.Action, mods::Int32 ) = keyInputEvent( p, action, key, mods )
     try
         mainWindow = GlWindow( getWindowWidth(p), getWindowHeight(p), getWindowTitle(p),
                       keyCallback, mouseButtonCallback, startFullscreen )
         p.mainWindow = mainWindow
-        try
-            @collectstats USER_INIT begin
-                @checkGlError initialize(p)
+        # try
+        @collectstats USER_INIT begin
+            @checkGlError initialize(p)
 
-                # @renderPhase includes the call to @collectstats RENDER
-                @renderPhase p.mainWindow begin
-                    showInitialLoadingScreen(p)
-                end
+            # @renderPhase includes the call to @collectstats RENDER
+            @collectstats RENDER begin
+                renderPhaseBegin( p.mainWindow )
 
-                @checkGlError expensiveInitialize(p)
-                @debug "User initialization done"
+                initView(p)
+
+                renderPhaseEnd( p.mainWindow )
             end
-            resetLogicFrames!( p.frameClock )
-            try
-                while !shouldClose( p.mainWindow )
-                    loopOnce(p)
-                end
-            finally
-                closeWindow( p.mainWindow )
-            end
-        catch err
-            @error "exiting due to exception $err"
-        finally
-            close(p)
+
+            @checkGlError expensiveInitialize(p)
+            @debug "User initialization done"
         end
+        resetLogicFrames!( p.frameClock )
+        try
+            while !shouldClose( p.mainWindow )
+                loopOnce(p)
+            end
+        finally
+            closeWindow( p.mainWindow )
+        end
+        # catch err
+        #     @error "exiting due to exception $err"
+        #     throw( err )
+        # finally
+        #     close(p)
+        #end
     finally
+        onExit(p)
         shutdownGlfw()
-        exit()
+        #exit()
     end
 end
 
-
-function showInitialLoadingScreen( loadingTexture::Texture, shader::ShaderProgram )
-    render( loadingTexture, TextureCoordinate(0.5,0.5), shader )
-end
 
 
 # TODO: get from command line property
 getDebugMode( p::GlProgramBase ) = return debugMode
 
-
-reportMetrics() = return Dict{ StatsName, Dict{StatsFieldName, String} }( stats.name => StatsAnalysis(stats)
-                                                                                 for stats in values( metrics.statContainers ))
-
-closeWindow( p::GlProgramBase ) = setShouldClose( p.mainWindow, true )
-
+reportMetrics() = return metrics.timeStats
 
 pollEvents( p::GlProgramBase ) = pollEvents( p.mainWindow )
+
 
 
 function loopOnce( p::GlProgramBase )
@@ -108,15 +108,16 @@ function loopOnce( p::GlProgramBase )
         # mark the videoFrameDriftTimer
         @collectstats FULL_LOGIC begin
             skippingFrames = false
-            totalSkippedFrames = 0
 
             # WARNING: half assed, probably bad version of a java do-while loop.
             while ( skippingFrames = logicLoopOnce( p, skippingFrames ) ) continue end
-            if debugMode && totalSkippedFrames < 0 @debug "total skipped frames: $totalSkippedFrames" end
         end
-        # @renderPhase includes the call to @collectstats RENDER
-        @renderPhase p.mainWindow begin
+        @collectstats RENDER begin
+            renderPhaseBegin( p.mainWindow )
+
             updateView(p)
+
+            renderPhaseEnd( p.mainWindow )
         end
     end
 end
@@ -125,7 +126,6 @@ end
 function logicLoopOnce( p::GlProgramBase, skippingFrames::Bool )
     if skippingFrames
         metrics.counters.skippedFramesByLogicCounter += 1
-        if debugMode totalSkippedFrames += 1 end
     end
     @collectstats LOGIC begin
         # XXX this is NOT the proper use of the word "idempotent" Dom

@@ -80,8 +80,8 @@ macro collectstats( statsName, body )
     checkArgument( statsName isa Symbol && ( name = eval(statsName) ) isa StatsName, "1st arg to @collecttimes must be a StatsName" )
     checkArgument( body isa Expr && body.head in (:call, :block, :macrocall, :->), "2nd arg to @collecttimes must be a function, macrocall, or begin block (got $body)" )
 
-    checkKeyCall = esc(:(if !haskey( metrics.timeStats, $name ) metrics.timeStats[$name] = TimeStats() end))
-    updateCall = esc(:(updateStats!(metrics.timeStats[$name], @timed( $body )...)))
+    checkKeyCall = esc(:( if !haskey( metrics.timeStats, $name ) metrics.timeStats[$name] = TimeStats() end ))
+    updateCall = esc(:( updateStats!(metrics.timeStats[$name], @timed( $body )...) ))
 
     return quote
         $checkKeyCall

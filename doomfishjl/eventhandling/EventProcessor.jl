@@ -35,7 +35,14 @@ end
 
 # input handling
 
-enqueueInput!( ϵ::EventProcessor, input::Input ) = haskey( ϵ.inputMap, input ) ? push!( ϵ.inputQueue, input ) : return
+function enqueueInput!( ϵ::EventProcessor, input::Input )
+    @debug "received Input $input"
+    if haskey( ϵ.inputMap, input )
+        push!( ϵ.inputQueue, input )
+        @debug "enqueued Input $input"
+    end
+end
+
 
 function processInputs!( ϵ::EventProcessor )
     while !(ϵ.inputQueue |> isempty)

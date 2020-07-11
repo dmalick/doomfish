@@ -13,9 +13,9 @@ macro onEvent( event, callback )
     # could do a try-catch but the error message for checkEventRegistered
     # is good enough.
     return quote
-        checkEventRegistered( glProgram.EventProcessor, glProgram.AbstractLogicHandler, $event )
-        registerEvent!( glProgram.EventProcessor, $event )
-        registerCallback!( glProgram.AbstractLogicHandler, $event, ()-> $callback )
+        checkEventRegistered( mainGlProgram.EventProcessor, mainGlProgram.AbstractLogicHandler, $event )
+        registerEvent!( mainGlProgram.EventProcessor, $event )
+        registerCallback!( mainGlProgram.AbstractLogicHandler, $event, ()-> $callback )
     end
 end
 

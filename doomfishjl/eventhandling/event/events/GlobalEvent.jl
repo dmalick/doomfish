@@ -14,5 +14,5 @@ struct GlobalEvent <: Event
 end
 
 
-GlobalEvent( eventType::KeyEventType, key::GLFW.Key ) = GlobalEvent( eventType, input = KeyInput( eventType, key ) )
+GlobalEvent( eventType::KeyEventType, key::GLFW.Key; mods::UInt16=zero(UInt16) ) = GlobalEvent( eventType, input = KeyInput( eventType, key, mods ) )
 GlobalEvent( eventType::MouseEventType, button::GLFW.MouseButton ) = GlobalEvent( eventType, input = MouseInput( eventType, button ) )

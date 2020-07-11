@@ -20,7 +20,8 @@ end
 function initGlfw( ;debug::Bool = debugMode )
     checkState( GLFW.Init(), "GLFW failed to initialize" )
     if debug
-        JULIA_DEBUG = Main
+        ENV["JULIA_DEBUG"] = Main
+        outputStats = true
 
         # original betamax code:
         # // enable glfw debugging
@@ -88,8 +89,8 @@ function createWindow( width::Int, height::Int, title::String, fullscreen::Bool 
 
     if debugMode
         # enable opengl debugging
-        glEnable( GL_DEBUG_OUTPUT )
-        glDebugMessageCallback( @cfunction( debugMessageCallback, Nothing, (UInt32, UInt32, UInt32, UInt32, Int, String, Ptr{Nothing}) ) , Ptr{Nothing}(0) )
+        # glEnable( GL_DEBUG_OUTPUT )
+        # glDebugMessageCallback( @cfunction( debugMessageCallback, Nothing, (UInt32, UInt32, UInt32, UInt32, Int, String, Ptr{Nothing}) ) , Ptr{Nothing}(0) )
         # original betamax code:
         # GlDebugMessages.setupJavaStyleDebugMessageCallback(LOG);
         # // glDisable(GL_CULL_FACE);
@@ -112,7 +113,7 @@ function centerWindow( glWindow::GlWindow )
 end
 
 function setShouldClose( glWindow::GlWindow, shouldClose::Bool )
-    checkstate( !glWindow.isDestroyed )
+    checkState( !glWindow.isDestroyed )
     GLFW.SetWindowShouldClose( glWindow.handle, shouldClose )
 end
 
@@ -142,7 +143,7 @@ end
 # be aware that this may come to bite us.
 getCursorPosition( glWindow::GlWindow; coordType::GlCoordinate = TextureCoordinate ) = getCursorPosition( glWindow.handle, coordType )
 
-function getCursorPosition( windowHandle::Int64; coordType::GlCoordinate = TextureCoordinate )
+function getCursorPosition( windowHandle::GLFW.Window; coordType::GlCoordinate = TextureCoordinate )
     cursorPosition = GLFW.GetCursorPos( windowHandle )
     x = cursorPosition.x
     y = cursorPosition.y
@@ -167,20 +168,6 @@ function pollEvents( glWindow::GlWindow )
     GLFW.PollEvents()
     checkGlError()
 end
-
-
-macro renderPhase( glWindow, body )
-    # checkArgument( glWindow isa Symbol || glWindow.head === :., "first argument to @renderPhase must be a GlWindow; got $glWindow" )
-    # checkArgument( eval( glWindow ) isa GlWindow, "first argument to @renderPhase must be a GlWindow; got $glWindow")
-    checkArgument( body.head === :block, "@renderPhase (GlWindow) must be followed by a begin block" )
-        return quote
-            @collectstats RENDER begin
-                renderPhaseBegin( $glWindow )
-                $body
-                renderPhaseEnd( $glWindow )
-            end
-        end
-    end
 
 
 function renderPhaseBegin( glWindow::GlWindow )
