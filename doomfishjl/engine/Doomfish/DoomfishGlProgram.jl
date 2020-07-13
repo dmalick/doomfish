@@ -11,32 +11,35 @@ include("/home/gil/doomfish/doomfishjl/eventhandling/AbstractEventProcessor.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 
 include("/home/gil/doomfish/doomfishjl/scripting/ScriptWorld.jl")
-include( resourcePathBase * "scripting.jl" )
 
+include("DefaultTextureLoadAdvisor.jl")
 include("GlProgramBase.jl")
 include("GameLoopFrameClock.jl")
-include("DefaultTextureLoadAdvisor.jl")
+include("allshaders.jl")
 
 
 struct DoomfishGlProgram <: GlProgramBase
     mainWindow::GlWindow
     frameClock::GameLoopFrameClock
+
     eventProcessor::EventProcessor
     logicHandler::AbstractLogicHandler
-    # soundWorld::SoundWorld
-    # soundRegistry::SoundRegistry
+
     textureRegistry::TextureRegistry
     spriteTemplateRegistry::SpriteTemplateRegistry
-    # devConsole::DevConsole
-    # soundSyncer::SoundSyncer
-    # scriptWorld::ScriptWorld
     spriteRegistry::SpriteRegistry
+
+    # soundWorld::SoundWorld
+    # soundRegistry::SoundRegistry
+    # soundSyncer::SoundSyncer
+
+    # devConsole::DevConsole
     # highlightedSprite::Union{SpriteName, Nothing}
-    scriptWorld::ScriptWorld
 
     pausedTexture::Texture
     loadingTexture::Texture
     crashTexture::Texture
+
     crashed::Bool # = false
     loading::Bool # = false
 end
@@ -53,12 +56,11 @@ end
 
 
 function initialize()
-    if mainScript == Nothing
-        @error "No main logic script defined (-Dbetamax.mainScript), exiting"
-        throw( ArgumentError("No main logic script defined") )
+    if mainScript == nothing
+        @error "No main logic script defined, exiting"
+        Error("No main logic script defined")
     end
 
-    include("allshaders.jl")
     prepareForDrawing()
     prepareBuiltinTextures()
 
@@ -123,9 +125,7 @@ function newWorld( program::DoomfishGlProgram; resetSprites::Bool )
 
     @debug "Creating script world"
     eventProcessor = EventProcessor( program.spriteRegistry, program.frameClock )
-    globalScriptWorld = ScriptWorld( program.spriteRegistry, eventProcessor, program.frameClock )
-    program.scriptWorld = globalScriptWorld
-    scriptNames = mainScript.split(",")
+
 
     try
         @info "Loading scripts $scriptNames"

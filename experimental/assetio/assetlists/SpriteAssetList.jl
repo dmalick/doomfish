@@ -20,7 +20,7 @@ struct SpriteAssetList <: AssetList
 
     templateName::String
     textureNames::Vector{TextureName}
-    soundNames::Vector{SoundName}
+    soundNames::Vector{SoundFileName}
 
     function SpriteAssetList(templateName, textureNames, soundNames)
         # TODO: when additional sound functionality is added we'll remove this restriction
@@ -55,12 +55,12 @@ end
 # (of course we couldn't write it the way it's written in the java even if we wanted to.)
 # this could also have been written with the filter function which might possibly be faster for large data sets
 # however, for small test data sets it performs the same, and it requires a convert method which completely
-# negates the type safety of the betamax TextureName and SoundName wrappers. As it is there are convert methods for
-# going from TextureName/SoundName to String, but not the other way around.
+# negates the type safety of the betamax TextureName and SoundFileName wrappers. As it is there are convert methods for
+# going from TextureName/SoundFileName to String, but not the other way around.
 function loadSpriteAssetList(templateName::String)
     templatePathContents = readdir( spritePathBase * templateName )
     spriteFilenames = [ TextureName(filename) for filename in templatePathContents if occursin(IMAGE_PATTERN, filename) ]
-    soundFilenames = [ SoundName(filename) for filename in templatePathContents if occursin(SOUND_PATTERN, filename) ]
+    soundFilenames = [ SoundFileName(filename) for filename in templatePathContents if occursin(SOUND_PATTERN, filename) ]
     return SpriteAssetList( templateName, spriteFilenames, soundFilenames )
 end
 

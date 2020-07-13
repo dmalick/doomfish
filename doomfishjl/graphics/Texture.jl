@@ -12,14 +12,14 @@ include("/home/gil/doomfish/doomfishjl/opengl/VBO.jl")
 # A texture stored in opengl. But it can load and unload itself into and out of VRAM on demand transparently
 # For methods beginning with name of "bt" bind() must be called first
 mutable struct Texture # default values:
-    handle::Int # -1
+    handle::Union{ Int, Nothing }
     vramLoaded::Bool # false
     lazyTextureImage::LazyTextureImage
     boundTarget::Int # 0
     name::TextureName # lazyTextureImage.name
 
     function Texture( textureImage::LazyTextureImage )
-        texture = new( -1, false, textureImage, 0, textureImage.name )
+        texture = new( nothing, false, textureImage, 0, textureImage.name )
         metrics.counters.virtualTexturesCounter += 1
         return texture
     end

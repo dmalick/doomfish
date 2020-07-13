@@ -8,10 +8,10 @@ struct JlSprite
     repeatIndefinitely::Bool
 
 
-    moments::Dict{ Union{Int, String}, Vector{Function} }
+    moments = Dict{ Union{Int, String}, Vector{Function} }()
 
 
-    #physics::PhysicsContainer
+    physics::PhysicsContainer
 
 
     children::Vector{ JlSprite }

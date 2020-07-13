@@ -5,8 +5,8 @@ include("/home/gil/doomfish/doomfishjl/globalvars.jl")
 
 
 macro onEvent( event, callback )
-    checkArgument( argIs( event, :call ), "first arg to @onEvent must be an Event"  )
-    checkArgument( argIs( callback, :block ), "second arg to @onEvent must be a begin block" )
+    checkArgument( argIs( event, :call ), "first arg to @on must be an Event"  )
+    checkArgument( argIs( callback, :block ), "second arg to @on must be a begin block" )
 
     # passing a non-Event into the below call will crash, by design.
     # it's easier than manually checking the argument.
@@ -33,7 +33,7 @@ end
 
 
 
-# @onEvent GlobalEvent(MOUSE_RELEASE) begin
+# @on GlobalEvent(MOUSE_RELEASE) begin
 #     println("mouse released")
 # end
 #

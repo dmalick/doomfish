@@ -10,8 +10,8 @@ include("/home/gil/doomfish/doomfishjl/graphics/MemoryStrategy.jl")
 
 mutable struct SpriteTemplate
     textures::Vector{Texture}
-    # SoundName::Union{SoundName, Nothing}  # TODO: sound
-    # SoundBuffer::Union{SoundName, Nothing}
+    # SoundFileName::Union{SoundFileName, Nothing}  # TODO: sound
+    # SoundBuffer::Union{SoundFileName, Nothing}
     textureCount::Int
     nextCreationSerial::Int
     templateName::String
@@ -19,11 +19,12 @@ mutable struct SpriteTemplate
     memoryStrategy::MemoryStrategy
     textureRegistry::TextureRegistry
 end
+
 function SpriteTemplate(manifest::SpriteTemplateManifest, textureRegistry::TextureRegistry)
     templateName = manifest.templateName
     textures = [ getTexture!( textureRegistry, textureName ) for textureName in manifest.textureNames ]
     textureCount = sizeof( textures )
-    # soundName = manifest.soundName [or] getSoundName(manifest), [etc]
+    # soundName = manifest.soundName [or] getSoundFileName(manifest), [etc]
     memoryStrategy = chooseMemoryStrategy( sizeof(textures) )
     frameCount = sizeof( manifest.textureNames )
     @debug "Constructed $frameCount--frame SpriteTemplate $templateName"
@@ -42,7 +43,7 @@ include("/home/gil/doomfish/doomfishjl/engine/GameplaySnapshot.jl")
 
 function renderTemplate(spriteTemplate::SpriteTemplate, whichFrame::Int, location::TextureCoordinate, shaderProgram::ShaderProgram)
     texture = textures[ whichFrame ]
-    
+
     @collectstats TEXTURE_RENDERING render( texture, location, shaderProgram )
     @collectstats TEXTURE_AFTER_RENDER afterRender( spriteTemplate.textureRegistry, spriteTemplate.memoryStrategy, texture )
 end

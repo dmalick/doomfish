@@ -1,31 +1,73 @@
-
-include("/home/gil/doomfish/doomfishjl/eventhandling/event/Event.jl")
+using GLFW
+import Base.|
+include("/home/gil/doomfish/pseudointerface/checks.jl")
 
 
 abstract type Input end
 
-# the reason this is here and not in the EventProcessor is that we want to allow for
-# special cases where inputs may need to be checked/altered before being registered
-# (e.g., MouseInputs include specific coordinates, but of course we can't register
-# a separate version of a MouseInput for EVERY possible coordinate, so we'd write
-# a specific method of registerInput! for dealing w/ MouseInputs).
 
-registerInput!( inputMap::Dict{ Input, Vector{Event} }, event::Event, input::Input ) = registerInput_finalize!( inputMap, event, input )
+macro key_str( key )
+    key = lowercase( key )
 
-# helper method, only be called by methods of registerInput!.
-function registerInput_finalize!( inputMap::Dict{ Input, Vector{Event} }, event::Event, input::Input )
-    if !haskey( inputMap, input ) inputMap[input] = Vector{Event}() end
-    checkState( !( event in inputMap[input] ), "event $event already registered for input $(event.input)" )
-    push!( inputMap[input], event )
+    key = replace( key, '-'=>'_' )
+    key = replace( key, "l_"=>"left_" )
+    key = replace( key, "r_"=>"right_" )
+    key = replace( key, "scrolleft_"=>"scroll_" ) # scroll lock is the one case where replacing "l_" wasn't safe
+
+    key = replace( key, "ctrl"=>"control" ) # obvious
+    key = replace( key, "equals"=>"equal" )
+    key = replace( key, "tilde"=>"grave_accent" ) # `seriously?`
+    key = replace( key, "numpad"=>"kp" )
+    key = replace( key, "numlock"=>"num_lock" )
+    key = replace( key, "capslock"=>"caps_lock" )
+
+    key = uppercase( key )
+    key = "GLFW.KEY_$key"
+    return Meta.parse(key)
 end
 
 
-# the inverse of the above case is the inputToEvents function, for cases in which just
-# looking up the Input in the inputMap Dict is not sufficient, i.e. the generated
-# events actually REQUIRE data from the dequeued Input that the generic Input (registered
-# in the inputMap) does not have.
+macro action_str( action )
+    action = replace( action, "click"=>"press" ) # more logical for mouse use contexts
+    action = replace( action, "hold"=>"repeat" ) # ditto, but works for keys as well
+    action = uppercase(action)
+    action = Meta.parse("GLFW.$action")
+    checkArgument( eval(action) isa GLFW.Action, "$action not a valid GLFW.Action" )
+    return action
+end
 
-# the generic method of inputToEvents just looks up the event list in the inputMap and
-# returns it. More specific methods should be written for Input types that require them.
 
-inputToEvents( inputMap::Dict{ Input, Vector{Event} }, input::Input ) = return inputMap[input]
+macro mousebutton_str( button )
+    button = uppercase(button)
+    button = "GLFW.MOUSE_BUTTON_$button"
+    return Meta.parse(button)
+end
+
+
+# even if you hate the @_str syntax, these should still be useful
+
+@enum Mod begin
+    SHIFT = 0x0001
+    CTRL = 0x0002
+    ALT = 0x0004
+    SUPER = 0x0008
+    CAPSLOCK = 0x0010
+    NUMLOCK = 0x0020
+end
+
+|(a::Mod, b::Mod) = UInt16(a)|UInt16(b)
+|(a::UInt16, b::Mod) = a|UInt16(b)
+
+
+macro mods_str( modstring )
+    modstring = replace( modstring, ","=>" " )
+    # it looks hilarious, but it makes catching errors so much easier
+    mods = uppercase.( split(modstring) )
+    try checkState.( isa.(eval.(Symbol.(mods)), Mod) )
+    catch err
+        @error """"$modstring" not valid mod(s)\nvalid mods are: shift, ctrl, alt, super, capslock, numlock"""
+        throw(err)
+    end
+    mods = Meta.parse( join( mods, "|" ) )
+    return :( UInt16( $mods ) )
+end

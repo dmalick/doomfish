@@ -1,12 +1,15 @@
-include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/input/inputhandling.jl")
+include("/home/gil/doomfish/doomfishjl/eventhandling/logic/DefaultLogic.jl")
 include("/home/gil/doomfish/doomfishjl/eventhandling/EventProcessor.jl")
 #include("/home/gil/doomfish/doomfishjl/sprite/SpriteRegistry.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/VAO.jl")
 include("/home/gil/doomfish/doomfishjl/opengl/VBO.jl")
-include("/home/gil/doomfish/doomfishjl/scripting/scriptservicer.jl") # includes GlProgramBase, doomfishtool, globalvars
-include("allshaders.jl")
-include("GameLoopFrameClock.jl")
+include("/home/gil/doomfish/doomfishjl/engine/GlProgramBase.jl") # includes GlProgramBase, doomfishtool, globalvars
+include("/home/gil/doomfish/doomfishjl/engine/allshaders.jl")
+include("/home/gil/doomfish/doomfishjl/engine/GameLoopFrameClock.jl")
+include("AbstractDumbshitGlProgram.jl")
+
+includeDir("/home/gil/doomfish/doomfishjl/eventhandling/event/events/")
 
 
 # DumbshitGlProgram is FOR TESTING PURPOSES ONLY
@@ -23,7 +26,7 @@ elements = Array{UInt32}([0,1,2,2,3,0])
 defaultGlobalShaderName = "corners"
 
 
-mutable struct DumbshitGlProgram <: GlProgramBase
+mutable struct DumbshitGlProgram <: AbstractDumbshitGlProgram # <: GlProgramBase
 
     mainWindow::Union{ GlWindow, Nothing }
     frameClock::GameLoopFrameClock
@@ -109,17 +112,17 @@ function initialize( p::DumbshitGlProgram )
 
     initShaderProgram(p)
 
-    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_N), ()->( @info "`n` key pressed" ) )
-    registerEvent( p, GlobalEvent(KEY_RELEASE, GLFW.KEY_N), ()->( @info "`n` key released" ) )
+    # registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_N), ()->( @info "`n` key pressed" ) )
+    # registerEvent( p, GlobalEvent(KEY_RELEASE, GLFW.KEY_N), ()->( @info "`n` key released" ) )
+    #
+    # registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_S, mods = GLFW.MOD_CONTROL), ()-> display(metrics.timeStats) )
+    # registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_D, mods = GLFW.MOD_CONTROL), ()-> toggleDebug() )
+    #
+    # registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_ESCAPE), ()-> setShouldClose(p.mainWindow, true) )
+    # #registerEvent( p, GlobalEvent(KEY_REPEATED, key = GLFW.KEY_N), ()->( @info "`n` key repeated" ), input = KeyInput(GLFW.REPEAT, GLFW.KEY_N) )
+    # registerCallback!( p.logicHandler, GlobalEvent(LOGIC_FRAME_END), ()-> return )
 
-    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_S, mods = GLFW.MOD_CONTROL), ()-> display(metrics.timeStats) )
-    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_D, mods = GLFW.MOD_CONTROL), ()-> toggleDebug() )
-
-    registerEvent( p, GlobalEvent(KEY_PRESS, GLFW.KEY_ESCAPE), ()-> setShouldClose(p.mainWindow, true) )
-    #registerEvent( p, GlobalEvent(KEY_REPEATED, key = GLFW.KEY_N), ()->( @info "`n` key repeated" ), input = KeyInput(GLFW.REPEAT, GLFW.KEY_N) )
-    registerCallback!( p.logicHandler, GlobalEvent(LOGIC_FRAME_END), ()-> return )
-
-    registerTransforms(p)
+    #registerTransforms(p)
 
     p.eventProcessor = EventProcessor( p.eventRegistry )
     p.eventRegistry = nothing
@@ -131,7 +134,7 @@ end
 expensiveInitialize( p::DumbshitGlProgram ) = @debug "expensiveInitialize" #preloadTemplates( p.spriteRegistry.spriteTemplateRegistry )
 
 
-function initView( p::DumbshitGlProgram )
+function showInitialScreen( p::DumbshitGlProgram )
 
     # WARNING: these calls to getAttribLocation will fail (return -1) if they've
     # already been called once in the current Julia REPL session.
@@ -201,9 +204,12 @@ end
 onExit( p::DumbshitGlProgram ) = outputStats ? display(metrics.timeStats) : return
 
 
-function registerEvent( γ::DumbshitGlProgram, event::Event, callback::Function )
-    @info "registering Event $event with callback $callback $(event.input != nothing ? "on input $(event.input)" : "" )"
-    checkState( γ.eventRegistry != nothing, "cannot register $Event; EventProcessor already initialized" )
-    registerEvent!( γ.eventRegistry, event )
-    registerCallback!( γ.logicHandler, event, callback )
+function loadScripts( p::DumbshitGlProgram )
+
+    p.logicHandler.acceptingCallbacks = true
+
+    includeFiles( resourcePathBase * "scripts/" )
+
+    p.logicHandler.acceptingCallbacks = false
+
 end

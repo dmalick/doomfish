@@ -85,7 +85,7 @@ convert(String, sprite::DefaultSpriteImpl) = return "Sprite($(sprite.name))"
 
 
 function isClickableAtCoordinate(sprite::DefaultSpriteImpl, coord::TextureCoordinate)
-    if sprite.clickability == TRANSPARENCY_BASED
+    if sprite.clickability == EVEYWHERE
         return true
     elseif sprite.clickability == NOWHERE
         return false

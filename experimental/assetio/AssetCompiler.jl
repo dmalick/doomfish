@@ -23,7 +23,7 @@ function compileAssets()
 
     compileAssets( neededTextures, TextureName )
     compileAssets( neededMeshes, MeshName )
-    compileAssets( neededSounds, SoundName )
+    compileAssets( neededSounds, SoundFileName )
 end
 
 

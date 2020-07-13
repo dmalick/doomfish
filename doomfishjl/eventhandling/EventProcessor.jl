@@ -6,7 +6,7 @@ include("logic/DefaultLogic.jl")
 
 # a queueable unique object for signaling when to stop event dispatch
 # and wait for the next logic frame.
-struct LogicFrameEnd <: AbstractQueuedEvent end
+struct DispatchEnd <: AbstractQueuedEvent end
 
 
 # differs from the first incarnation of the EventProcessor in that we no longer
@@ -66,11 +66,10 @@ function dispatchEvents!( ϵ::EventProcessor, logicHandler::AbstractLogicHandler
     # so that when we sort it by priority we don't have to reverse the sort order
     sort!( ϵ.eventQueue )
     # since dispatched events can themselves add more events to the eventQueue, we
-    # push! a unique LogicFrameEnd object to the queue before dispatching events to
+    # push! a unique DispatchEnd object to the queue before dispatching events to
     # signal when the queue should stop and wait for the next logic frame.
-    push!( ϵ.eventQueue, LogicFrameEnd() )
-
-    while (nextQueuedEvent = popfirst!(ϵ.eventQueue)) !== LogicFrameEnd()
+    push!( ϵ.eventQueue, DispatchEnd() )
+    while (nextQueuedEvent = popfirst!(ϵ.eventQueue)) !== DispatchEnd()
         onEvent( logicHandler, nextQueuedEvent.event )
     end
     # the LOGIC_FRAME_END event is dispatched after all other events in a single logic frame,

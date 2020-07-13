@@ -16,7 +16,7 @@ end
 @abstractMethod GlProgramBase keyInputEvent( key::GLFW.Key, action::GLFW.Action, mods::Int )
 @abstractMethod GlProgramBase mouseInputEvent( window::GLFW.Window, action::GLFW.Action, button::GLFW.MouseButton, mods::Int )
 @abstractMethod GlProgramBase processInputs()
-@abstractMethod GlProgramBase initView()
+@abstractMethod GlProgramBase showInitialScreen()
 # updateView could be called every frame, more than once per frame, less often, etc.
 @abstractMethod GlProgramBase updateView()
 # updateLogic will be called exactly once per logical frame, ie, once for frame 0, then once for frame 1, etc
@@ -50,7 +50,7 @@ function runGlProgram( p::GlProgramBase )
             @collectstats RENDER begin
                 renderPhaseBegin( p.mainWindow )
 
-                initView(p)
+                showInitialScreen(p)
 
                 renderPhaseEnd( p.mainWindow )
             end

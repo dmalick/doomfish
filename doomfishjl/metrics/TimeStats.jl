@@ -5,15 +5,14 @@ include("StatsName.jl")
 mutable struct TimeStats
     lastTime::Float64
     avgTime::Float64
-    totalTimes::Int
 
     lastByteCt::Int
     avgByteCt::Float64
-    totalByteCts::Int
 
     lastGCtime::Float64
     avgGCtime::Float64
-    totalGCtimes::Int
+
+    totalStatsCollected::Int
 end
 
 TimeStats() = TimeStats( zeros( fieldcount(TimeStats) )... )
@@ -21,16 +20,17 @@ TimeStats() = TimeStats( zeros( fieldcount(TimeStats) )... )
 
 function updateStats!( stats::TimeStats, time::Float64, byteCt::Int, gctime::Float64 )
     stats.lastTime = time
-    stats.avgTime = newAvg( time, stats.avgTime, stats.totalTimes )
-    stats.totalTimes += 1
+    stats.avgTime = newAvg( time, stats.avgTime, stats.totalStatsCollected )
+
 
     stats.lastByteCt = byteCt
-    stats.avgByteCt = newAvg( byteCt, stats.avgByteCt, stats.totalByteCts )
-    stats.totalByteCts += 1
+    stats.avgByteCt = newAvg( byteCt, stats.avgByteCt, stats.totalStatsCollected )
+
 
     stats.lastGCtime = gctime
-    stats.avgGCtime = newAvg( gctime, stats.avgGCtime, stats.totalGCtimes )
-    stats.totalGCtimes += 1
+    stats.avgGCtime = newAvg( gctime, stats.avgGCtime, stats.totalStatsCollected )
+
+    stats.totalStatsCollected += 1
 end
 
 function updateStats!( stats::TimeStats, returnval, time::Float64, byteCt::Int, gctime::Float64, memallocs )

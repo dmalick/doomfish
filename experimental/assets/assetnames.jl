@@ -26,14 +26,14 @@ struct MeshName <: AssetName
     MeshName(filename; cached=false) = new( filename, MESH, 1, meshCacheKey, MESH_LOADING_STATS, cached )
 end
 
-struct SoundName <: AssetName
+struct SoundFileName <: AssetName
     filename::String
     type::AssetType
     headerSize::Int
     cacheKey::String
     loadingStatsName::StatsName
     cached::Bool
-    SoundName(filename; cached=false) = new( filename, SOUND, 1, soundCacheKey, SOUND_LOADING_STATS, cached )
+    SoundFileName(filename; cached=false) = new( filename, SOUND, 1, soundCacheKey, SOUND_LOADING_STATS, cached )
 end
 
 

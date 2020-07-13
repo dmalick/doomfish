@@ -5,7 +5,7 @@ abstract type Event end
 
 
 Key = Union{ GLFW.Key, Nothing }
-Moment = Union{ Int, Nothing }
+
 
 
 EVENT_PRIORITIES = OrderedDict{ Int, Vector{EventType} }(

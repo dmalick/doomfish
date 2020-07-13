@@ -55,7 +55,8 @@ end
 
 
 function onLogicFrameEnd( λ::DefaultLogic )
-    # @debug "end of logic frame propagation step"
-    callback = getCallback( λ, GlobalEvent( LOGIC_FRAME_END ) )
-    @collectstats INVOKE_LOGIC_FRAME_END_CALLBACK callback()
+    frameEndCallbacks = getCallback.( λ, [ pair.second #=callback=# for pair in λ.callbacks if pair.first#=event=#.eventType === LOGIC_FRAME_END ] )
+    @collectstats ON_LOGIC_FRAME_END begin
+        for callback in frameEndCallbacks @collectstats INVOKE_EVENT_CALLBACK callback() end
+    end
 end
