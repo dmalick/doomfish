@@ -55,7 +55,7 @@ end
 
 
 function onLogicFrameEnd( λ::DefaultLogic )
-    frameEndCallbacks = getCallback.( λ, [ pair.second #=callback=# for pair in λ.callbacks if pair.first#=event=#.eventType === LOGIC_FRAME_END ] )
+    frameEndCallbacks = [ pair.second #=callback=# for pair in λ.callbacks if pair.first#=event=#.eventType === LOGIC_FRAME_END ]
     @collectstats ON_LOGIC_FRAME_END begin
         for callback in frameEndCallbacks @collectstats INVOKE_EVENT_CALLBACK callback() end
     end

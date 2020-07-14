@@ -29,7 +29,7 @@ include("/home/gil/doomfish/doomfishjl/engine/Dumbshit/scriptservicer.jl")
 @on KeyPress( key"n" ) @info "`n` key pressed"
 @on KeyRelease( key"n" ) @info "`n` key released"
 
-@on KeyPress( keyPress"ctrl s" ) display( metrics.timeStats )
-@on KeyPress( keyPress"ctrl d" ) toggleDebug()
+@on KeyPress( keypress"ctrl s" ) display( metrics.timeStats )
+@on KeyPress( keypress"ctrl d" ) toggleDebug()
 
 @on KeyPress( key"escape" ) setShouldClose( mainGlProgram.mainWindow, true )

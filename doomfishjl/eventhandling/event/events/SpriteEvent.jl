@@ -19,8 +19,8 @@ end
 # isLogicFrameEnd(event::Union{GlobalEvent, SpriteEvent}) = return hasmoment(event) && event.moment ==
 
 
-SpriteEvent( name::SpriteName, input::KeyInput ) = SpriteEvent( name, KeyEventType( Int(input.action) ) input=input )
-SpriteEvent( name::SpriteName, input::MouseInput ) = SpriteEvent( name, MouseEventType( Int(input.action) ) input=input )
+SpriteEvent( name::SpriteName, input::KeyInput ) = SpriteEvent( name, KeyEventType( Int(input.action) ), input=input )
+SpriteEvent( name::SpriteName, input::MouseInput ) = SpriteEvent( name, MouseEventType( Int(input.action) ), input=input )
 
 
 
